@@ -1,0 +1,17 @@
+{
+  "domain": "madvr",
+  "name": "MadVR Envy",
+  "config_flow": false,
+  "requirements": [
+    "py-madvr==1.0.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@iloveicedgreentea"
+  ],
+  "iot_class": "local_polling",
+  "version": "1.0.0"
+}
