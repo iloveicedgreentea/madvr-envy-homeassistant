@@ -45,6 +45,7 @@ def setup_platform(
         ]
     )
 
+
 class MadvrCls(RemoteEntity):
     """Implements the interface for Madvr Remote in HA."""
 
@@ -61,6 +62,7 @@ class MadvrCls(RemoteEntity):
         self._is_connected = False
         self.madvr_client = madvr_client
 
+        # from the client
         self._incoming_res = ""
         self._incoming_frame_rate = ""
         self._incoming_color_space = ""
@@ -90,15 +92,19 @@ class MadvrCls(RemoteEntity):
     def update(self):
         """Retrieve latest state."""
         self._state = self.madvr_client.is_on
-        self._incoming_res = ""
-        self._incoming_frame_rate = ""
-        self._incoming_color_space = ""
-        self._incoming_bit_depth = ""
-        self._hdr_flag = False
-        self._incoming_colorimetry = ""
-        self._incoming_black_levels = ""
+        # Make the client poll
+        self.madvr_client.poll_status()
+
+        # Add client state to entity state
+        self._incoming_res = self.madvr_client.incoming_res
+        self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
+        self._incoming_color_space = self.madvr_client.incoming_color_space
+        self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
+        self._hdr_flag = self.madvr_client.hdr_flag
+        self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
+        self._incoming_black_levels = self.madvr_client.incoming_black_levels
         # TODO: use this to determine masking in HA
-        self._aspect_ratio: float = 0
+        self._aspect_ratio = self.madvr_client.aspect_ratio
 
     @property
     def extra_state_attributes(self):
@@ -113,32 +119,24 @@ class MadvrCls(RemoteEntity):
             "incoming_bit_depth": self._incoming_bit_depth,
             "incoming_colorimetry": self._incoming_colorimetry,
             "incoming_black_levels": self._incoming_black_levels,
-            "aspect_ratio": self._aspect_ratio
+            "aspect_ratio": self._aspect_ratio,
         }
 
     @property
     def is_on(self):
-        """Return the last known state of the projector."""
+        """Return the last known state."""
         return self._state
 
-     # TODO: HA should close client on shutdown
-    # TODO opene oconnection on startup
-
-    # Can't implement right now because of their API not working when off
-    # TODO: maybe do wake on lan here
-    # def turn_on(self, **kwargs):
-    #     """Send the power on command."""
-
-    #     self.madvr_client.power_on()
-    #     self._state = True
-
     def turn_off(self, **kwargs):
-        """Send the power off command."""
+        """Send the power off command. Will tell envy to shut off and close the socket too"""
         self.madvr_client.power_off()
         self._state = False
 
     def turn_on(self, **kwargs):
-        """Send the power on command but not really."""
+        """
+        Send the power on command but not really.
+        You must call this for it to connect but turn it on with IR/RF
+        """
         # Assumes madvr is already on
         self.madvr_client.open_connection()
         self._state = True
