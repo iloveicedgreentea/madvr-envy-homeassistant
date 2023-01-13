@@ -110,7 +110,7 @@ class MadvrCls(RemoteEntity):
 
     def update(self):
         """Retrieve latest state."""
-        if self.madvr_client.is_on:
+        if self.is_on:
             # Make the client poll, client handles heartbeat
             self.madvr_client.poll_status()
 
