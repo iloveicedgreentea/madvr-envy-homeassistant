@@ -48,6 +48,7 @@ def setup_platform(
 
 class MadvrCls(RemoteEntity):
     """Implements the interface for Madvr Remote in HA."""
+
     # TODO: make second integration or secondary configuration like notification mode?
     # Based on a const, in configuration.yaml if you set notifiations = true, it wont read commands?
 
@@ -76,6 +77,21 @@ class MadvrCls(RemoteEntity):
         self._incoming_aspect_ratio = ""
         # TODO: use this to determine masking in HA
         self._aspect_ratio: float = 0
+
+        # Temps
+        self._temp_gpu: int = 0
+        self._temp_hdmi: int = 0
+        self._temp_cpu: int = 0
+        self._temp_mainboard: int = 0
+
+        # Outgoing signal
+        self._outgoing_res = ""
+        self._outgoing_frame_rate = ""
+        self._outgoing_color_space = ""
+        self._outgoing_bit_depth = ""
+        self._outgoing_colorimetry = ""
+        self._outgoing_hdr_flag = False
+        self._outgoing_black_levels = ""
 
     @property
     def should_poll(self):
@@ -111,6 +127,21 @@ class MadvrCls(RemoteEntity):
         # TODO: use this to determine masking in HA
         self._aspect_ratio = self.madvr_client.aspect_ratio
 
+        # Temps
+        self._temp_gpu: int = self.madvr_client.temp_gpu
+        self._temp_hdmi: int = self.madvr_client.temp_hdmi
+        self._temp_cpu: int = self.madvr_client.temp_cpu
+        self._temp_mainboard: int = self.madvr_client.temp_mainboard
+
+        # Outgoing signal
+        self._outgoing_res = self.madvr_client.outgoing_res
+        self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
+        self._outgoing_color_space = self.madvr_client.outgoing_color_space
+        self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
+        self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
+        self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
+        self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
+
     @property
     def extra_state_attributes(self):
         """Return extra state attributes."""
@@ -124,7 +155,21 @@ class MadvrCls(RemoteEntity):
             "incoming_bit_depth": self._incoming_bit_depth,
             "incoming_colorimetry": self._incoming_colorimetry,
             "incoming_black_levels": self._incoming_black_levels,
+            # AR
             "aspect_ratio": self._aspect_ratio,
+            # temps
+            "temp_gpu": self._temp_gpu,
+            "temp_hdmi": self._temp_hdmi,
+            "temp_cpu": self._temp_cpu,
+            "temp_mainboard": self._temp_mainboard,
+            # Outgoing signal
+            "outgoing_res": self._outgoing_res,
+            "outgoing_frame_rate": self._outgoing_frame_rate,
+            "outgoing_color_space": self._outgoing_color_space,
+            "outgoing_bit_depth": self._outgoing_bit_depth,
+            "outgoing_colorimetry": self._outgoing_colorimetry,
+            "outgoing_hdr_flag": self._outgoing_hdr_flag,
+            "outgoing_black_levels": self._outgoing_black_levels,
         }
 
     @property
