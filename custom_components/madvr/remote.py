@@ -185,7 +185,7 @@ class MadvrCls(RemoteEntity):
     def turn_on(self, **kwargs):
         """
         Send the power on command but not really.
-        You must call this for it to connect but turn it on with IR/RF
+        You must call this for it to connect but turn it on with IR/RF FIRST
         """
         # Assumes madvr is already on
         self.madvr_client.open_connection()
