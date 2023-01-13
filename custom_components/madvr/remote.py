@@ -110,37 +110,37 @@ class MadvrCls(RemoteEntity):
 
     def update(self):
         """Retrieve latest state."""
+        if self.madvr_client.is_on:
+            # Make the client poll, client handles heartbeat
+            self.madvr_client.poll_status()
 
-        # Make the client poll, client handles heartbeat
-        self.madvr_client.poll_status()
+            self._state = self.madvr_client.is_on
+            # Add client state to entity state
+            self._incoming_res = self.madvr_client.incoming_res
+            self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
+            self._incoming_color_space = self.madvr_client.incoming_color_space
+            self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
+            # TODO: set up automation based on this trigger correct picture mode JVC
+            self._hdr_flag = self.madvr_client.hdr_flag
+            self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
+            self._incoming_black_levels = self.madvr_client.incoming_black_levels
+            # TODO: use this to determine masking in HA
+            self._aspect_ratio = self.madvr_client.aspect_ratio
 
-        self._state = self.madvr_client.is_on
-        # Add client state to entity state
-        self._incoming_res = self.madvr_client.incoming_res
-        self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
-        self._incoming_color_space = self.madvr_client.incoming_color_space
-        self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
-        # TODO: set up automation based on this trigger correct picture mode JVC
-        self._hdr_flag = self.madvr_client.hdr_flag
-        self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
-        self._incoming_black_levels = self.madvr_client.incoming_black_levels
-        # TODO: use this to determine masking in HA
-        self._aspect_ratio = self.madvr_client.aspect_ratio
+            # Temps
+            self._temp_gpu: int = self.madvr_client.temp_gpu
+            self._temp_hdmi: int = self.madvr_client.temp_hdmi
+            self._temp_cpu: int = self.madvr_client.temp_cpu
+            self._temp_mainboard: int = self.madvr_client.temp_mainboard
 
-        # Temps
-        self._temp_gpu: int = self.madvr_client.temp_gpu
-        self._temp_hdmi: int = self.madvr_client.temp_hdmi
-        self._temp_cpu: int = self.madvr_client.temp_cpu
-        self._temp_mainboard: int = self.madvr_client.temp_mainboard
-
-        # Outgoing signal
-        self._outgoing_res = self.madvr_client.outgoing_res
-        self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
-        self._outgoing_color_space = self.madvr_client.outgoing_color_space
-        self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
-        self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
-        self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
-        self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
+            # Outgoing signal
+            self._outgoing_res = self.madvr_client.outgoing_res
+            self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
+            self._outgoing_color_space = self.madvr_client.outgoing_color_space
+            self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
+            self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
+            self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
+            self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
 
     @property
     def extra_state_attributes(self):
