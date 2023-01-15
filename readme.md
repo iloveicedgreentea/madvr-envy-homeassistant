@@ -42,6 +42,14 @@ remote:
     scan_interval: 3
 ```
 
+*Note*
+
+Because the Envy IP Control does not work if it is off or not rendering, you must manually call the remote.turn_on service.
+
+This initiates the IP connection. You can do this from an automation like if AVR/JVC is on, call the service.
+
+When you call the remote.turn_off service, it will shut down the Envy and also close the TCP connection.
+
 ## Automate JVC Picture Modes for HDR
 ```yaml
 alias: JVC - Envy picture mode HDR
