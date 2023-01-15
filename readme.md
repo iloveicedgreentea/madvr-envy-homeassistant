@@ -42,6 +42,41 @@ remote:
     scan_interval: 3
 ```
 
+## Automate JVC Picture Modes for HDR
+```yaml
+alias: JVC - Envy picture mode HDR
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - remote.envy
+    attribute: hdr_flag
+condition: []
+action:
+  - if:
+      - condition: state
+        entity_id: remote.envy
+        attribute: hdr_flag
+        state: true
+    then:
+      - service: remote.send_command
+        data:
+          command: picture_mode,user2
+        target:
+          entity_id: remote.nz7
+  - if:
+      - condition: state
+        entity_id: remote.envy
+        attribute: hdr_flag
+        state: false
+    then:
+      - service: remote.send_command
+        data:
+          command: picture_mode,user1
+        target:
+          entity_id: remote.nz7
+mode: single
+```
 
 ## Useful Stuff
 
