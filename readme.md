@@ -4,13 +4,21 @@ This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](htt
 
 ## Features
 
-- Power (off, standby, reset, etc)
+- Attributes for Incoming Signal, Outgoing Signal, Aspect ratio, Temperature
+- HDR Flag
+- Power off, standby
 - Navigation Keys
 - Menu
 - etc
 
-*Upcoming features: reading notifications into attributes, adding support for sensors for info like temperatures*
+## Why use this?
+Automate your theater based on Envy attributes like HDR flag, aspect ratio etc. E.x If hdr_flag = true, set JVC picture mode to XYZ. The HDR flag for the envy is broken for NZ models so this is really useful.
 
+You can also trigger masking systems based on the aspect ratio reported by Envy
+
+Turn off Envy via IP control
+
+Create remotes inside HA Dashboard to send commands like Menu, Right, etc. Basically remake the remote in the UI. 
 
 ## Installation
 
@@ -22,28 +30,22 @@ https://hacs.xyz/docs/faq/custom_repositories
 You can also just copy all the files into your custom_components folder but then you won't get automatic updates.
 
 ### Home Assistant Setup
-todo
+Add this to configuration.yaml
 
-### Adding attributes as sensors
+I recommend a scan_interval of at least 3. The integration will poll every $scan_interval seconds. 
 
-replace nz7 with the name of your remote entity
 ```yaml
-sensor:
-  platform: template
-  sensors:
-    jvc_installation_mode:
-        value_template: >
-            {% if is_state('remote.nz7', 'on') %}
-              {{ states.remote.nz7.attributes.installation_mode }}
-            {% else %}
-                Off
-            {% endif %}
+remote:
+  - platform: madvr
+    name: envy
+    host: 192.168.88.38
+    scan_interval: 3
 ```
 
-## Usage
-todo
 
 ## Useful Stuff
+
+I wrote this for my NZ7 but you can change the commands to Envy commands and it will work the same way.
 
 I used this to re-create a remote in HA. Add the YAML to your dashboard to get a grid which resembles most of the remote. Other functions can be used via remote.send_command. See the library readme for details.
 
