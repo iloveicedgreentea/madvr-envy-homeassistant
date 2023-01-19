@@ -110,37 +110,41 @@ class MadvrCls(RemoteEntity):
 
     def update(self):
         """Retrieve latest state."""
+        # TODO: it should not be updating if its off
+
+        # Should only poll if its on
         if self.is_on:
+            self.madvr_client.logger.warning("Envy update is on")
             # Make the client poll, client handles heartbeat
             self.madvr_client.poll_status()
 
-            self._state = self.madvr_client.is_on
-            # Add client state to entity state
-            self._incoming_res = self.madvr_client.incoming_res
-            self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
-            self._incoming_color_space = self.madvr_client.incoming_color_space
-            self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
-            # TODO: set up automation based on this trigger correct picture mode JVC
-            self._hdr_flag = self.madvr_client.hdr_flag
-            self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
-            self._incoming_black_levels = self.madvr_client.incoming_black_levels
-            # TODO: use this to determine masking in HA
-            self._aspect_ratio = self.madvr_client.aspect_ratio
+        # Add client state to entity state
+        self._state = self.madvr_client.is_on
 
-            # Temps
-            self._temp_gpu: int = self.madvr_client.temp_gpu
-            self._temp_hdmi: int = self.madvr_client.temp_hdmi
-            self._temp_cpu: int = self.madvr_client.temp_cpu
-            self._temp_mainboard: int = self.madvr_client.temp_mainboard
+        # incoming signal
+        self._incoming_res = self.madvr_client.incoming_res
+        self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
+        self._incoming_color_space = self.madvr_client.incoming_color_space
+        self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
+        self._hdr_flag = self.madvr_client.hdr_flag
+        self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
+        self._incoming_black_levels = self.madvr_client.incoming_black_levels
+        self._aspect_ratio = self.madvr_client.aspect_ratio
 
-            # Outgoing signal
-            self._outgoing_res = self.madvr_client.outgoing_res
-            self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
-            self._outgoing_color_space = self.madvr_client.outgoing_color_space
-            self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
-            self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
-            self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
-            self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
+        # Temps
+        self._temp_gpu: int = self.madvr_client.temp_gpu
+        self._temp_hdmi: int = self.madvr_client.temp_hdmi
+        self._temp_cpu: int = self.madvr_client.temp_cpu
+        self._temp_mainboard: int = self.madvr_client.temp_mainboard
+
+        # Outgoing signal
+        self._outgoing_res = self.madvr_client.outgoing_res
+        self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
+        self._outgoing_color_space = self.madvr_client.outgoing_color_space
+        self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
+        self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
+        self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
+        self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
 
     @property
     def extra_state_attributes(self):
@@ -177,12 +181,20 @@ class MadvrCls(RemoteEntity):
         """Return the last known state."""
         return self._state
 
-    def turn_off(self, **kwargs):
-        """Send the power off command. Will tell envy to shut off and close the socket too"""
-        self.madvr_client.power_off()
-        self._state = False
+    def turn_off(self, standby=False):
+        """
+        Send the power off command. Will tell envy to shut off and close the socket too
 
-    def turn_on(self, **kwargs):
+        send 'True' if you want standby instead
+        """
+        self.madvr_client.close_connection()
+
+        # Check if on so send_command does not open connection if its off already
+        if self.is_on:
+            self.madvr_client.power_off(standby)
+            self._state = False
+
+    def turn_on(self):
         """
         Send the power on command but not really.
         You must call this for it to connect but turn it on with IR/RF FIRST
