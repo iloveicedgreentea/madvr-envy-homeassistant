@@ -110,11 +110,8 @@ class MadvrCls(RemoteEntity):
 
     def update(self):
         """Retrieve latest state."""
-        # TODO: it should not be updating if its off
-
         # Should only poll if its on
         if self.is_on:
-            self.madvr_client.logger.warning("Envy update is on")
             # Make the client poll, client handles heartbeat
             self.madvr_client.poll_status()
 
