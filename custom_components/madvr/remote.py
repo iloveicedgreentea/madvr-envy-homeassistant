@@ -184,12 +184,13 @@ class MadvrCls(RemoteEntity):
 
         send 'True' if you want standby instead
         """
-        self.madvr_client.close_connection()
 
         # Check if on so send_command does not open connection if its off already
         if self.is_on:
             self.madvr_client.power_off(standby)
-            self._state = False
+        else:
+            self.madvr_client.close_connection()
+        self._state = False
 
     def turn_on(self):
         """
