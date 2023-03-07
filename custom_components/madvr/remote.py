@@ -49,10 +49,6 @@ def setup_platform(
 class MadvrCls(RemoteEntity):
     """Implements the interface for Madvr Remote in HA."""
 
-    # TODO: make second integration or secondary configuration like notification mode?
-    # Based on a const, in configuration.yaml if you set notifiations = true, it wont read commands?
-
-    # TODO: hass.async_create_task(async_say_hello(hass, target)) will that run in backgrond?
     def __init__(
         self,
         name: str,
@@ -75,7 +71,6 @@ class MadvrCls(RemoteEntity):
         self._incoming_colorimetry = ""
         self._incoming_black_levels = ""
         self._incoming_aspect_ratio = ""
-        # TODO: use this to determine masking in HA
         self._aspect_ratio: float = 0
 
         # Temps
