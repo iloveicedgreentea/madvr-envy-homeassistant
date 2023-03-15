@@ -173,7 +173,7 @@ class MadvrCls(RemoteEntity):
         """Return the last known state."""
         return self._state
 
-    def turn_off(self, standby=False):
+    def turn_off(self, standby=False, **kwargs):
         """
         Send the power off command. Will tell envy to shut off and close the socket too
 
@@ -187,7 +187,7 @@ class MadvrCls(RemoteEntity):
             self.madvr_client.close_connection()
         self._state = False
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """
         Send the power on command but not really.
         You must call this for it to connect but turn it on with IR/RF FIRST
@@ -196,7 +196,7 @@ class MadvrCls(RemoteEntity):
         self.madvr_client.open_connection()
         self._state = True
 
-    def send_command(self, command: str):
+    def send_command(self, command: str, **kwargs):
         """Send commands to a device."""
 
         self.madvr_client.send_command(command)
