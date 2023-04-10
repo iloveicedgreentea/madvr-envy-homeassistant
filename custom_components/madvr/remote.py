@@ -25,10 +25,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
     """Set up platform."""
@@ -39,7 +39,10 @@ def setup_platform(
         logger=_LOGGER,
         connect_timeout=config.get(CONF_TIMEOUT),
     )
-    add_entities(
+    # Run notifications in the background
+    hass.loop.create_task(madvr_client.start_read_notifications(wait_forever=True))
+
+    async_add_entities(
         [
             MadvrCls(name, host, madvr_client),
         ]
@@ -91,7 +94,7 @@ class MadvrCls(RemoteEntity):
     @property
     def should_poll(self):
         """Poll."""
-        return True
+        return False
 
     @property
     def name(self):
@@ -103,12 +106,14 @@ class MadvrCls(RemoteEntity):
         """Host."""
         return self._host
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
         # Should only poll if its on
-        if self.is_on:
-            # Make the client poll, client handles heartbeat
-            self.madvr_client.poll_status()
+        # if self.is_on:
+        #     # Make the client poll, client handles heartbeat
+        #     self.madvr_client.poll_status()
+
+        # Refresh all attributes based on client
 
         # Add client state to entity state
         self._state = self.madvr_client.is_on
@@ -173,7 +178,7 @@ class MadvrCls(RemoteEntity):
         """Return the last known state."""
         return self._state
 
-    def turn_off(self, standby=False, **kwargs):
+    async def async_turn_off(self, standby=False, **kwargs):
         """
         Send the power off command. Will tell envy to shut off and close the socket too
 
@@ -182,21 +187,21 @@ class MadvrCls(RemoteEntity):
 
         # Check if on so send_command does not open connection if its off already
         if self.is_on:
-            self.madvr_client.power_off(standby)
+            await self.madvr_client.power_off(standby)
         else:
-            self.madvr_client.close_connection()
+            await self.madvr_client.close_connection()
         self._state = False
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """
         Send the power on command but not really.
         You must call this for it to connect but turn it on with IR/RF FIRST
         """
         # Assumes madvr is already on
-        self.madvr_client.open_connection()
+        await self.madvr_client.open_connection()
         self._state = True
 
-    def send_command(self, command: str, **kwargs):
+    async def async_send_command(self, command: str, **kwargs):
         """Send commands to a device."""
 
-        self.madvr_client.send_command(command)
+        await self.madvr_client.send_command(command)

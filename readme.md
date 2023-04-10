@@ -1,6 +1,6 @@
 # MadVR Envy Home Assistant
 
-This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr)
+This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
 
 ## Features
 
