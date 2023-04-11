@@ -94,7 +94,7 @@ class MadvrCls(RemoteEntity):
     @property
     def should_poll(self):
         """Poll."""
-        return False
+        return True
 
     @property
     def name(self):
