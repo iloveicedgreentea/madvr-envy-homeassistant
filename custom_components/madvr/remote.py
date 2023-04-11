@@ -1,6 +1,7 @@
 """Implement madvr component."""
 from collections.abc import Iterable
 import logging
+import asyncio
 
 from madvr.madvr import Madvr
 import voluptuous as vol
@@ -90,6 +91,8 @@ class MadvrCls(RemoteEntity):
         self._outgoing_colorimetry = ""
         self._outgoing_hdr_flag = False
         self._outgoing_black_levels = ""
+
+        asyncio.run(self.madvr_client.open_connection())
 
     @property
     def should_poll(self):
