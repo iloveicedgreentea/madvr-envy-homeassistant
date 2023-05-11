@@ -40,8 +40,8 @@ async def async_setup_platform(
         logger=_LOGGER,
         connect_timeout=config.get(CONF_TIMEOUT),
     )
-    # Run notifications in the background
-    hass.loop.create_task(madvr_client.start_read_notifications(wait_forever=True))
+    # Open connection
+    # await madvr_client.open_connection()
 
     async_add_entities(
         [
@@ -66,38 +66,15 @@ class MadvrCls(RemoteEntity):
         self._is_connected = False
         self.madvr_client = madvr_client
 
-        # from the client
-        self._incoming_res = ""
-        self._incoming_frame_rate = ""
-        self._incoming_color_space = ""
-        self._incoming_bit_depth = ""
-        self._hdr_flag = False
-        self._incoming_colorimetry = ""
-        self._incoming_black_levels = ""
-        self._incoming_aspect_ratio = ""
-        self._aspect_ratio: float = 0
+        self.attrs = {}
 
-        # Temps
-        self._temp_gpu: int = 0
-        self._temp_hdmi: int = 0
-        self._temp_cpu: int = 0
-        self._temp_mainboard: int = 0
-
-        # Outgoing signal
-        self._outgoing_res = ""
-        self._outgoing_frame_rate = ""
-        self._outgoing_color_space = ""
-        self._outgoing_bit_depth = ""
-        self._outgoing_colorimetry = ""
-        self._outgoing_hdr_flag = False
-        self._outgoing_black_levels = ""
-
+        self.command_queue = asyncio.Queue()
         asyncio.run(self.madvr_client.open_connection())
-
+        asyncio.create_task(self.handle_queue())
     @property
     def should_poll(self):
         """Poll."""
-        return True
+        return False
 
     @property
     def name(self):
@@ -111,75 +88,34 @@ class MadvrCls(RemoteEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        # Should only poll if its on
-        # if self.is_on:
-        #     # Make the client poll, client handles heartbeat
-        #     self.madvr_client.poll_status()
-
-        # Refresh all attributes based on client
-
-        # Add client state to entity state
+        # grab attrs from client
         self._state = self.madvr_client.is_on
-
-        # incoming signal
-        self._incoming_res = self.madvr_client.incoming_res
-        self._incoming_frame_rate = self.madvr_client.incoming_frame_rate
-        self._incoming_color_space = self.madvr_client.incoming_color_space
-        self._incoming_bit_depth = self.madvr_client.incoming_bit_depth
-        self._hdr_flag = self.madvr_client.hdr_flag
-        self._incoming_colorimetry = self.madvr_client.incoming_colorimetry
-        self._incoming_black_levels = self.madvr_client.incoming_black_levels
-        self._aspect_ratio = self.madvr_client.aspect_ratio
-
-        # Temps
-        self._temp_gpu: int = self.madvr_client.temp_gpu
-        self._temp_hdmi: int = self.madvr_client.temp_hdmi
-        self._temp_cpu: int = self.madvr_client.temp_cpu
-        self._temp_mainboard: int = self.madvr_client.temp_mainboard
-
-        # Outgoing signal
-        self._outgoing_res = self.madvr_client.outgoing_res
-        self._outgoing_frame_rate = self.madvr_client.outgoing_frame_rate
-        self._outgoing_color_space = self.madvr_client.outgoing_color_space
-        self._outgoing_bit_depth = self.madvr_client.outgoing_bit_depth
-        self._outgoing_colorimetry = self.madvr_client.outgoing_colorimetry
-        self._outgoing_hdr_flag = self.madvr_client.outgoing_hdr_flag
-        self._outgoing_black_levels = self.madvr_client.outgoing_black_levels
+        self.attrs = self.madvr_client.msg_dict
 
     @property
     def extra_state_attributes(self):
         """Return extra state attributes."""
         # Useful for making sensors
-        return {
-            "power_state": self._state,
-            "hdr_flag": self._hdr_flag,
-            "incoming_resolution": self._incoming_res,
-            "incoming_frame_rate": self._incoming_frame_rate,
-            "incoming_color_space": self._incoming_color_space,
-            "incoming_bit_depth": self._incoming_bit_depth,
-            "incoming_colorimetry": self._incoming_colorimetry,
-            "incoming_black_levels": self._incoming_black_levels,
-            # AR
-            "aspect_ratio": self._aspect_ratio,
-            # temps
-            "temp_gpu": self._temp_gpu,
-            "temp_hdmi": self._temp_hdmi,
-            "temp_cpu": self._temp_cpu,
-            "temp_mainboard": self._temp_mainboard,
-            # Outgoing signal
-            "outgoing_res": self._outgoing_res,
-            "outgoing_frame_rate": self._outgoing_frame_rate,
-            "outgoing_color_space": self._outgoing_color_space,
-            "outgoing_bit_depth": self._outgoing_bit_depth,
-            "outgoing_colorimetry": self._outgoing_colorimetry,
-            "outgoing_hdr_flag": self._outgoing_hdr_flag,
-            "outgoing_black_levels": self._outgoing_black_levels,
-        }
+        return self.attrs
 
     @property
     def is_on(self):
         """Return the last known state."""
         return self._state
+
+    async def handle_queue(self):
+        """Handle items in command queue."""
+        while True:
+            # If there's a command in the queue, get it and send it
+            while not self.command_queue.empty():
+                command = await self.command_queue.get()
+                await self.madvr_client.send_command(command)
+                self.command_queue.task_done()
+
+            # Process notifications, this will write attr to dict
+            await self.madvr_client.read_notifications()
+            
+            await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
 
     async def async_turn_off(self, standby=False, **kwargs):
         """
@@ -198,7 +134,7 @@ class MadvrCls(RemoteEntity):
     async def async_turn_on(self, **kwargs):
         """
         Send the power on command but not really.
-        You must call this for it to connect but turn it on with IR/RF FIRST
+        You must call this for it to connect
         """
         # Assumes madvr is already on
         await self.madvr_client.open_connection()
@@ -207,4 +143,4 @@ class MadvrCls(RemoteEntity):
     async def async_send_command(self, command: str, **kwargs):
         """Send commands to a device."""
 
-        await self.madvr_client.send_command(command)
+        await self.command_queue.put(command)
