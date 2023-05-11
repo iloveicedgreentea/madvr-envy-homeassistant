@@ -1,15 +1,15 @@
 """Implement madvr component."""
-from collections.abc import Iterable
 import logging
 import asyncio
+from wakeonlan import send_magic_packet
 
 from madvr.madvr import Madvr
 import voluptuous as vol
 
 from homeassistant.components.remote import PLATFORM_SCHEMA, RemoteEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -21,6 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_TIMEOUT): cv.string,
     }
 )
@@ -35,6 +36,7 @@ async def async_setup_platform(
     """Set up platform."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+    mac = config.get(CONF_MAC)
     madvr_client = Madvr(
         host=host,
         logger=_LOGGER,
@@ -45,7 +47,7 @@ async def async_setup_platform(
 
     async_add_entities(
         [
-            MadvrCls(name, host, madvr_client),
+            MadvrCls(name, host, mac, madvr_client),
         ]
     )
 
@@ -57,6 +59,7 @@ class MadvrCls(RemoteEntity):
         self,
         name: str,
         host: str,
+        mac: str,
         madvr_client: Madvr = None,
     ) -> None:
         """MadVR Init."""
@@ -65,7 +68,7 @@ class MadvrCls(RemoteEntity):
         self._state = False
         self._is_connected = False
         self.madvr_client = madvr_client
-
+        self.mac = mac
         self.attrs = {}
 
         self.command_queue = asyncio.Queue()
@@ -90,6 +93,7 @@ class MadvrCls(RemoteEntity):
         """Retrieve latest state."""
         # grab attrs from client
         self._state = self.madvr_client.is_on
+        # msg dict would be cached if put below, so needs to get updated
         self.attrs = self.madvr_client.msg_dict
 
     @property
@@ -106,15 +110,15 @@ class MadvrCls(RemoteEntity):
     async def handle_queue(self):
         """Handle items in command queue."""
         while True:
-            # If there's a command in the queue, get it and send it
+            # send all commands in queue
             while not self.command_queue.empty():
                 command = await self.command_queue.get()
                 await self.madvr_client.send_command(command)
                 self.command_queue.task_done()
 
-            # Process notifications, this will write attr to dict
+            # Process notifications, this will write attr to msg_dict
             await self.madvr_client.read_notifications()
-            
+
             await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
 
     async def async_turn_off(self, standby=False, **kwargs):
@@ -137,6 +141,7 @@ class MadvrCls(RemoteEntity):
         You must call this for it to connect
         """
         # Assumes madvr is already on
+        send_magic_packet(self.mac)
         await self.madvr_client.open_connection()
         self._state = True
 

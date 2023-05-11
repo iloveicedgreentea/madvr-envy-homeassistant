@@ -4,11 +4,12 @@ This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](htt
 
 ## Features
 
-- Attributes for Incoming Signal, Outgoing Signal, Aspect ratio, Temperature
-- HDR Flag
+- Real time Attributes for Incoming Signal, Outgoing Signal, Aspect ratio
+- HDR Flag to trigger brightness automation
 - Power off, standby
 - Navigation Keys
 - Menu
+- Wake on lan built in
 - etc
 
 ## Why use this?
@@ -39,7 +40,7 @@ remote:
   - platform: madvr
     name: envy
     host: 192.168.88.38
-    scan_interval: 3
+    mac: (mac addr)
 ```
 
 *Note*
