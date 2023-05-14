@@ -43,7 +43,7 @@ async def async_setup_platform(
         connect_timeout=config.get(CONF_TIMEOUT),
     )
     # Open connection
-    # await madvr_client.open_connection()
+    await madvr_client.open_connection()
 
     async_add_entities(
         [
@@ -79,13 +79,13 @@ class MadvrCls(RemoteEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        task = self.hass.loop.create_task(self.madvr_client.open_connection())
-        self.tasks.append(task)
+        # task = self.hass.loop.create_task(self.madvr_client.open_connection())
+        # self.tasks.append(task)
         task = self.hass.loop.create_task(self.handle_queue())
         self.tasks.append(task)
         task = self.hass.loop.create_task(self.madvr_client.read_notifications())
         self.tasks.append(task)
-    
+
     async def async_will_remove_from_hass(self) -> None:
         self.madvr_client.stop()
         for task in self.tasks:
@@ -118,12 +118,12 @@ class MadvrCls(RemoteEntity):
     def extra_state_attributes(self):
         """Return extra state attributes."""
         # Useful for making sensors
-        return self.attrs
+        return self.madvr_client.msg_dict
 
     @property
     def is_on(self):
         """Return the last known state."""
-        return self._state
+        return self.madvr_client.is_on
 
     async def handle_queue(self):
         """Handle items in command queue."""
@@ -142,7 +142,6 @@ class MadvrCls(RemoteEntity):
                     self.command_queue.task_done()
 
             await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
-
 
     async def async_turn_off(self, standby=False, **kwargs):
         """
