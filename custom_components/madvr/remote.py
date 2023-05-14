@@ -47,7 +47,7 @@ async def async_setup_platform(
 
     async_add_entities(
         [
-            MadvrCls(name, host, mac, madvr_client),
+            MadvrCls(hass, name, host, mac, madvr_client),
         ]
     )
 
@@ -57,6 +57,7 @@ class MadvrCls(RemoteEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         host: str,
         mac: str,
@@ -70,10 +71,16 @@ class MadvrCls(RemoteEntity):
         self.madvr_client = madvr_client
         self.mac = mac
         self.attrs = {}
+        self.hass = hass
 
         self.command_queue = asyncio.Queue()
-        asyncio.run(self.madvr_client.open_connection())
-        asyncio.create_task(self.handle_queue())
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.hass.loop.create_task(self.madvr_client.open_connection())
+        self.hass.loop.create_task(self.handle_queue())
+        self.hass.loop.create_task(self.madvr_client.read_notifications())
+
     @property
     def should_poll(self):
         """Poll."""
@@ -113,11 +120,12 @@ class MadvrCls(RemoteEntity):
             # send all commands in queue
             while not self.command_queue.empty():
                 command = await self.command_queue.get()
-                await self.madvr_client.send_command(command)
-                self.command_queue.task_done()
+                try:
+                    await self.madvr_client.send_command(command)
+                except AttributeError:
+                    _LOGGER.warning("issue sending command")
 
-            # Process notifications, this will write attr to msg_dict
-            await self.madvr_client.read_notifications()
+                self.command_queue.task_done()
 
             await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
 
