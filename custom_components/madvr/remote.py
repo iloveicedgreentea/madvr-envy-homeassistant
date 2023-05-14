@@ -113,6 +113,8 @@ class MadvrCls(RemoteEntity):
         """Retrieve latest state."""
         # grab attrs from client
         self._state = self.madvr_client.is_on
+        # poll anyway, but realtime notifications will also be processed immediately
+        await self.async_send_command(["GetIncomingSignalInfo"])
         # msg dict would be cached if put below, so needs to get updated
         self.attrs = self.madvr_client.msg_dict
 
@@ -137,7 +139,7 @@ class MadvrCls(RemoteEntity):
                 try:
                     await self.madvr_client.send_command(command)
                 except AttributeError:
-                    _LOGGER.warning("issue sending command")
+                    _LOGGER.warning("issue sending command from queue")
                 except Exception as err:
                     _LOGGER.error("Unexpected error when sending command: %s", err)
                 finally:
