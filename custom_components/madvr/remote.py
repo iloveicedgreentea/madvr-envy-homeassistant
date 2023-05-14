@@ -124,10 +124,13 @@ class MadvrCls(RemoteEntity):
                     await self.madvr_client.send_command(command)
                 except AttributeError:
                     _LOGGER.warning("issue sending command")
-
-                self.command_queue.task_done()
+                except Exception as err:
+                    _LOGGER.error("Unexpected error when sending command: %s", err)
+                finally:
+                    self.command_queue.task_done()
 
             await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
+
 
     async def async_turn_off(self, standby=False, **kwargs):
         """
