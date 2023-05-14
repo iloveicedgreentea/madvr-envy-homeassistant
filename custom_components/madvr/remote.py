@@ -7,7 +7,7 @@ from madvr.madvr import Madvr
 import voluptuous as vol
 
 from homeassistant.components.remote import PLATFORM_SCHEMA, RemoteEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_MAC, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,6 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_TIMEOUT): cv.string,
+        vol.Required(CONF_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -42,8 +43,6 @@ async def async_setup_platform(
         logger=_LOGGER,
         connect_timeout=config.get(CONF_TIMEOUT),
     )
-    # Open connection
-    await madvr_client.open_connection()
 
     async_add_entities(
         [
@@ -69,6 +68,7 @@ class MadvrCls(RemoteEntity):
         self._state = False
         self._is_connected = False
         self.madvr_client = madvr_client
+        self.madvr_client.is_on = False
         self.mac = mac
         self.attrs = {}
         self.hass = hass
@@ -85,6 +85,8 @@ class MadvrCls(RemoteEntity):
         self.tasks.append(task)
         task = self.hass.loop.create_task(self.madvr_client.read_notifications())
         self.tasks.append(task)
+        task = self.hass.loop.create_task(self.madvr_client.send_heartbeat())
+        self.tasks.append(task)
 
     async def async_will_remove_from_hass(self) -> None:
         self.madvr_client.stop()
@@ -95,7 +97,7 @@ class MadvrCls(RemoteEntity):
     @property
     def should_poll(self):
         """Poll."""
-        return False
+        return True
 
     @property
     def name(self):
@@ -118,12 +120,12 @@ class MadvrCls(RemoteEntity):
     def extra_state_attributes(self):
         """Return extra state attributes."""
         # Useful for making sensors
-        return self.madvr_client.msg_dict
+        return self.attrs
 
     @property
     def is_on(self):
         """Return the last known state."""
-        return self.madvr_client.is_on
+        return self._state
 
     async def handle_queue(self):
         """Handle items in command queue."""
@@ -164,10 +166,11 @@ class MadvrCls(RemoteEntity):
         """
         # Assumes madvr is already on
         send_magic_packet(self.mac)
+        await asyncio.sleep(3)
         await self.madvr_client.open_connection()
         self._state = True
 
-    async def async_send_command(self, command: str, **kwargs):
+    async def async_send_command(self, command: list, **kwargs):
         """Send commands to a device."""
 
         await self.command_queue.put(command)

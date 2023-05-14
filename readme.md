@@ -33,7 +33,7 @@ You can also just copy all the files into your custom_components folder but then
 ### Home Assistant Setup
 Add this to configuration.yaml
 
-I recommend a scan_interval of at least 3. The integration will poll every $scan_interval seconds. 
+I recommend a scan_interval of 1. This will update the attributes most quickly
 
 ```yaml
 remote:
@@ -41,6 +41,7 @@ remote:
     name: envy
     host: 192.168.88.38
     mac: (mac addr)
+    scan_interval: 1
 ```
 
 *Note*
