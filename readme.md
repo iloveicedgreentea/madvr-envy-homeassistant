@@ -5,11 +5,11 @@ This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](htt
 ## Features
 
 - Real time Attributes for Incoming Signal, Outgoing Signal, Aspect ratio
+- Wake on lan built in
 - HDR Flag to trigger brightness automation
 - Power off, standby
 - Navigation Keys
 - Menu
-- Wake on lan built in
 - etc
 
 ## Why use this?
@@ -33,7 +33,7 @@ You can also just copy all the files into your custom_components folder but then
 ### Home Assistant Setup
 Add this to configuration.yaml
 
-I recommend a scan_interval of 1. This will update the attributes most quickly
+I recommend a scan_interval of 3
 
 ```yaml
 remote:
@@ -41,14 +41,8 @@ remote:
     name: envy
     host: 192.168.88.38
     mac: (mac addr)
-    scan_interval: 1
+    scan_interval: 3
 ```
-
-*Note*
-
-Because the Envy IP Control does not work if it is off or not rendering, you must manually call the remote.turn_on service.
-
-This initiates the IP connection. You can do this from an automation like if AVR/JVC is on, call the service.
 
 When you call the remote.turn_off service, it will shut down the Envy and also close the TCP connection.
 

@@ -7,7 +7,13 @@ from madvr.madvr import Madvr
 import voluptuous as vol
 
 from homeassistant.components.remote import PLATFORM_SCHEMA, RemoteEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_MAC, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_MAC,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,12 +76,12 @@ class MadvrCls(RemoteEntity):
         self.madvr_client = madvr_client
         self.madvr_client.is_on = False
         self.mac = mac
-        self.attrs = {}
         self.hass = hass
         self.tasks = []
         self.connection_event = self.madvr_client.connection_event
 
         self.command_queue = asyncio.Queue()
+        self.stop_processing_commands = asyncio.Event()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -113,16 +119,20 @@ class MadvrCls(RemoteEntity):
         """Retrieve latest state."""
         # grab attrs from client
         self._state = self.madvr_client.is_on
-        # poll anyway, but realtime notifications will also be processed immediately
-        await self.async_send_command(["GetIncomingSignalInfo"])
-        # msg dict would be cached if put below, so needs to get updated
-        self.attrs = self.madvr_client.msg_dict
+        if (
+            self.connection_event.is_set()
+            and not self.stop_processing_commands.is_set()
+        ):
+            # poll anyway, but realtime notifications will also be processed immediately
+            await self.async_send_command(["GetIncomingSignalInfo"])
+            await self.async_send_command(["GetAspectRatio"])
+            # msg dict would be cached if put below, so needs to get updated
 
     @property
     def extra_state_attributes(self):
         """Return extra state attributes."""
         # Useful for making sensors
-        return self.attrs
+        return self.madvr_client.msg_dict
 
     @property
     def is_on(self):
@@ -134,8 +144,12 @@ class MadvrCls(RemoteEntity):
         while True:
             await self.connection_event.wait()
             # send all commands in queue
-            while not self.command_queue.empty():
+            while (
+                not self.command_queue.empty()
+                and not self.stop_processing_commands.is_set()
+            ):
                 command = await self.command_queue.get()
+                _LOGGER.debug("sending queue command %s", command)
                 try:
                     await self.madvr_client.send_command(command)
                 except AttributeError:
@@ -145,9 +159,17 @@ class MadvrCls(RemoteEntity):
                 finally:
                     self.command_queue.task_done()
 
-            await asyncio.sleep(0.1)  # sleep for a bit before doing next iteration
+            if self.stop_processing_commands.is_set():
+                await self.clear_queue()
+                _LOGGER.debug("Stopped processing commands")
+                break
 
-    async def async_turn_off(self, standby=False, **kwargs):
+            await asyncio.sleep(0.1)
+    async def clear_queue(self):
+        """Clear all items from the command queue."""
+        self.command_queue = asyncio.Queue()
+
+    async def async_turn_off(self, **kwargs):
         """
         Send the power off command. Will tell envy to shut off and close the socket too
 
@@ -155,11 +177,14 @@ class MadvrCls(RemoteEntity):
         """
 
         # Check if on so send_command does not open connection if its off already
-        if self.is_on:
-            await self.madvr_client.power_off(standby)
-        else:
-            await self.madvr_client.close_connection()
+        self.stop_processing_commands.set()
+        await self.clear_queue()
+        await self.command_queue.join()
+
+        await self.madvr_client.power_off()
+        _LOGGER.debug("PowerOff command processed")
         self._state = False
+        _LOGGER.debug("turn off done")
 
     async def async_turn_on(self, **kwargs):
         """
@@ -174,5 +199,5 @@ class MadvrCls(RemoteEntity):
 
     async def async_send_command(self, command: list, **kwargs):
         """Send commands to a device."""
-
+        _LOGGER.debug("adding command %s", command)
         await self.command_queue.put(command)
