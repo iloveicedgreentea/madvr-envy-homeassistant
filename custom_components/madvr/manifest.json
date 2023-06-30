@@ -3,7 +3,7 @@
   "name": "MadVR Envy",
   "config_flow": false,
   "requirements": [
-    "py-madvr==1.4.4"
+    "py-madvr==1.4.5"
   ],
   "ssdp": [],
   "zeroconf": [],
@@ -13,5 +13,5 @@
     "@iloveicedgreentea"
   ],
   "iot_class": "local_polling",
-  "version": "1.4.4"
+  "version": "1.4.5"
 }
