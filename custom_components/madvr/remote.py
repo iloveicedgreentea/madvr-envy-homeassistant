@@ -165,6 +165,7 @@ class MadvrCls(RemoteEntity):
                 break
 
             await asyncio.sleep(0.1)
+
     async def clear_queue(self):
         """Clear all items from the command queue."""
         self.command_queue = asyncio.Queue()
@@ -177,17 +178,11 @@ class MadvrCls(RemoteEntity):
         """
 
         # Check if on so send_command does not open connection if its off already
-        _LOGGER.debug("setting stop processing")
         self.stop_processing_commands.set()
-        _LOGGER.debug("awaiting clear queue")
         await self.clear_queue()
-        _LOGGER.debug("awaiting join")
         await self.command_queue.join()
-        _LOGGER.debug("awaiting power off")
         await self.madvr_client.power_off()
-        _LOGGER.debug("PowerOff command processed")
         self._state = False
-        _LOGGER.debug("turn off done")
         _LOGGER.debug("self._state is now: %s", self._state)
 
     async def async_turn_on(self, **kwargs):

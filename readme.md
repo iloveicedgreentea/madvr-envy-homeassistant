@@ -9,6 +9,7 @@ This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](htt
 - HDR Flag to trigger brightness automation
 - Power off, standby
 - Navigation Keys
+- Profiles
 - Menu
 - etc
 
@@ -46,6 +47,22 @@ remote:
 
 When you call the remote.turn_off service, it will shut down the Envy and also close the TCP connection.
 
+## Profiles and 3D support
+
+Set your profile to Source 2
+
+For the following settings, save them to Source 2
+Resolution: 1080p
+Menu: optimized for 1080p
+Screen Boundaries: None
+
+Then use this plugin to send
+
+`ActivateProfile, SOURCE, 2`
+
+You can switch between 1 and 2 for 3d or 2d easily
+
+You can also use CUSTOM and use your own profile groups.
 ## Automate JVC Picture Modes for HDR
 ```yaml
 alias: JVC - Envy picture mode HDR
