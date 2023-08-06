@@ -85,14 +85,14 @@ class MadvrCls(RemoteEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        # task = self.hass.loop.create_task(self.madvr_client.open_connection())
-        # self.tasks.append(task)
-        task = self.hass.loop.create_task(self.handle_queue())
-        self.tasks.append(task)
-        task = self.hass.loop.create_task(self.madvr_client.read_notifications())
-        self.tasks.append(task)
-        task = self.hass.loop.create_task(self.madvr_client.send_heartbeat())
-        self.tasks.append(task)
+        task_con = self.hass.loop.create_task(self.ping_until_alive())
+        self.tasks.append(task_con)
+        task_queue = self.hass.loop.create_task(self.handle_queue())
+        self.tasks.append(task_queue)
+        task_notif = self.hass.loop.create_task(self.madvr_client.read_notifications())
+        self.tasks.append(task_notif)
+        task_hb = self.hass.loop.create_task(self.madvr_client.send_heartbeat())
+        self.tasks.append(task_hb)
 
     async def async_will_remove_from_hass(self) -> None:
         self.madvr_client.stop()
@@ -184,6 +184,47 @@ class MadvrCls(RemoteEntity):
         await self.madvr_client.power_off()
         self._state = False
         _LOGGER.debug("self._state is now: %s", self._state)
+
+        # wait until its off to start the task
+        _LOGGER.debug("adding ping to hass loop")
+        await asyncio.sleep(20)
+        task_con = self.hass.loop.create_task(self.ping_until_alive())
+        self.tasks.append(task_con)
+
+    async def ping_until_alive(self) -> None:
+        """ping unit until its alive. Once True, call open_connection"""
+        cmd = f"ping -c 1 -W 2 {self.host}"
+        sleep_interval = 5
+
+        while True:
+            try:
+                _LOGGER.debug("Pinging with cmd %s", cmd)
+                process = await asyncio.create_subprocess_shell(
+                    cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+
+                await process.communicate()
+
+                # if ping works, turn it on and exit
+                if process.returncode == 0:
+                    _LOGGER.debug("ping success, turning on")
+                    await asyncio.sleep(3)
+                    await self.madvr_client.open_connection()
+                    self._state = True
+
+                    return
+
+                # wait and continue
+                await asyncio.sleep(sleep_interval)
+                continue
+
+            except asyncio.CancelledError as err:
+                process.terminate()
+                await process.wait()
+                _LOGGER.error(err)
+            # intentionally broad
+            except Exception as err:
+                _LOGGER.error("some error happened with ping: %s", err)
 
     async def async_turn_on(self, **kwargs):
         """
