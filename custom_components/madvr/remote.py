@@ -181,7 +181,9 @@ class MadvrCls(RemoteEntity):
         self.stop_processing_commands.set()
         await self.clear_queue()
         await self.command_queue.join()
-        await self.madvr_client.power_off()
+        # power off in the background. There can be a situation where the remote is on but the thing is off then it will get stuck
+        task_power = self.hass.loop.create_task(self.madvr_client.power_off())
+        self.tasks.append(task_power)
         self._state = False
         _LOGGER.debug("self._state is now: %s", self._state)
 
