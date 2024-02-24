@@ -1,4 +1,5 @@
 """Implement madvr component."""
+
 import logging
 import asyncio
 from wakeonlan import send_magic_packet
@@ -82,6 +83,8 @@ class MadvrCls(RemoteEntity):
 
         self.command_queue = asyncio.Queue()
         self.stop_processing_commands = asyncio.Event()
+        # pass in the method to write state immediately
+        self.madvr_client.set_update_callback(self.async_write_ha_state)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
