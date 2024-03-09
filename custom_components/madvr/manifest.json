@@ -3,7 +3,7 @@
   "name": "MadVR Envy",
   "config_flow": false,
   "requirements": [
-    "py-madvr2==1.4.91"
+    "py-madvr2==1.4.92"
   ],
   "ssdp": [],
   "zeroconf": [],

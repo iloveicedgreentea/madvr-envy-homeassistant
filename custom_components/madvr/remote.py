@@ -3,6 +3,7 @@
 import logging
 import asyncio
 from wakeonlan import send_magic_packet
+import datetime
 
 from madvr.madvr import Madvr
 import voluptuous as vol
@@ -127,9 +128,11 @@ class MadvrCls(RemoteEntity):
             and not self.stop_processing_commands.is_set()
         ):
             # poll anyway, but realtime notifications will also be processed immediately
+            # this gets processed by read_notifications
             await self.async_send_command(["GetIncomingSignalInfo"])
             await self.async_send_command(["GetAspectRatio"])
-            # msg dict would be cached if put below, so needs to get updated
+            # add a timestamp to the msg dict
+            self.madvr_client.msg_dict["update_time"] = datetime.datetime.now().strftime("%H:%M:%S")
 
     @property
     def extra_state_attributes(self):
@@ -238,7 +241,7 @@ class MadvrCls(RemoteEntity):
         """
         # Assumes madvr is already on
         send_magic_packet(self.mac)
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
         await self.madvr_client.open_connection()
         self._state = True
 
