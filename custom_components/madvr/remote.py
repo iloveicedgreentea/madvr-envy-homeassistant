@@ -132,7 +132,9 @@ class MadvrCls(RemoteEntity):
             await self.async_send_command(["GetIncomingSignalInfo"])
             await self.async_send_command(["GetAspectRatio"])
             # add a timestamp to the msg dict
-            self.madvr_client.msg_dict["update_time"] = datetime.datetime.now().strftime("%H:%M:%S")
+            self.madvr_client.msg_dict["update_time"] = (
+                datetime.datetime.now().strftime("%H:%M:%S")
+            )
 
     @property
     def extra_state_attributes(self):
@@ -187,17 +189,11 @@ class MadvrCls(RemoteEntity):
         self.stop_processing_commands.set()
         await self.clear_queue()
         await self.command_queue.join()
-        # power off in the background. There can be a situation where the remote is on but the thing is off then it will get stuck
-        task_power = self.hass.loop.create_task(self.madvr_client.power_off())
-        self.tasks.append(task_power)
+
+        # power off
+        await self.madvr_client.power_off()
         self._state = False
         _LOGGER.debug("self._state is now: %s", self._state)
-
-        # wait until its off to start the task
-        _LOGGER.debug("adding ping to hass loop")
-        await asyncio.sleep(20)
-        task_con = self.hass.loop.create_task(self.ping_until_alive())
-        self.tasks.append(task_con)
 
     async def ping_until_alive(self) -> None:
         """ping unit until its alive. Once True, call open_connection"""
@@ -208,21 +204,26 @@ class MadvrCls(RemoteEntity):
             try:
                 _LOGGER.debug("Pinging with cmd %s", cmd)
                 process = await asyncio.create_subprocess_shell(
-                    cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                    cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await process.communicate()
 
-                # if ping works, turn it on and exit
+                # if ping works
                 if process.returncode == 0:
-                    _LOGGER.debug("ping success, turning on")
-                    await asyncio.sleep(3)
-                    await self.madvr_client.open_connection()
-                    self._state = True
+                    _LOGGER.debug("ping success")
+                    # if not connected, open connection
+                    if not self.connection_event.is_set():
+                        _LOGGER.debug("not connected, opening connection")
+                        await asyncio.sleep(3)
+                        await self.madvr_client.open_connection()
+                        self._state = True
 
-                    return
+                        continue  # keep pinging in case its off
 
-                # wait and continue
+                _LOGGER.debug("already connected, sleeping")
                 await asyncio.sleep(sleep_interval)
                 continue
 
@@ -233,6 +234,9 @@ class MadvrCls(RemoteEntity):
             # intentionally broad
             except Exception as err:
                 _LOGGER.error("some error happened with ping: %s", err)
+            # else:
+            #     _LOGGER.debug("Not pinging because not connected or stopped.")
+            #     await asyncio.sleep(sleep_interval)
 
     async def async_turn_on(self, **kwargs):
         """
@@ -242,6 +246,7 @@ class MadvrCls(RemoteEntity):
         # Assumes madvr is already on
         send_magic_packet(self.mac)
         await asyncio.sleep(5)
+        self.stop_processing_commands.clear()
         await self.madvr_client.open_connection()
         self._state = True
 
