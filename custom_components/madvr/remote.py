@@ -211,7 +211,8 @@ class MadvrCls(RemoteEntity):
 
                 await process.communicate()
 
-                # if ping works
+                # if ping worked
+                # there can be a situation where ping works once, and causes it to connect when off
                 if process.returncode == 0:
                     _LOGGER.debug("ping success")
                     # if not connected, open connection
