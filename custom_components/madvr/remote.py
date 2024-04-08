@@ -188,7 +188,6 @@ class MadvrCls(RemoteEntity):
         # Check if on so send_command does not open connection if its off already
         self.stop_processing_commands.set()
         await self.clear_queue()
-        await self.command_queue.join()
 
         # power off
         await self.madvr_client.power_off()
