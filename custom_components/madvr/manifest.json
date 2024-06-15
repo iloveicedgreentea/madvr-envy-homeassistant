@@ -1,17 +1,13 @@
 {
   "domain": "madvr",
   "name": "MadVR Envy",
-  "config_flow": false,
-  "requirements": [
-    "py-madvr2==1.5.4"
-  ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
+  "codeowners": ["@iloveicedgreentea"],
+  "config_flow": true,
   "dependencies": [],
-  "codeowners": [
-    "@iloveicedgreentea"
-  ],
-  "iot_class": "local_polling",
-  "version": "1.5.4"
+  "documentation": "https://www.home-assistant.io/integrations/madvr",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "silver",
+  "requirements": ["py-madvr2==1.5.100"]
 }

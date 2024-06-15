@@ -1,4 +1,3 @@
-"""Constants for the madvr integration."""
+"""Constants for the madvr-envy integration."""
 
 DOMAIN = "madvr"
-
