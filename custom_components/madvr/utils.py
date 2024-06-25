@@ -12,5 +12,6 @@ async def cancel_tasks(client: Madvr) -> None:
     if client.heartbeat_task:
         client.heartbeat_task.cancel()
 
+
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
