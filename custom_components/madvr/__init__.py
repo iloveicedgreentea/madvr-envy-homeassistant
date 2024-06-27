@@ -10,11 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import MadVRCoordinator
-from .utils import cancel_tasks
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
@@ -24,22 +22,24 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bool:
     """Set up the integration from a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
     madVRClient = Madvr(
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
-        port=entry.data.get(CONF_PORT, 44077),
+        port=entry.data[CONF_PORT],
         mac=entry.data[CONF_MAC],
         connect_timeout=10,
+        loop=hass.loop,
     )
     coordinator = MadVRCoordinator(
         hass,
+        entry,
         madVRClient,
         name=name,
     )
     hass.data.setdefault(DOMAIN, {})
     await coordinator.async_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     hass.data[DOMAIN]["entry_id"] = entry.entry_id
 
     await coordinator.async_config_entry_first_refresh()
@@ -55,9 +55,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator: MadVRCoordinator = hass.data[DOMAIN].pop(entry.entry_id, None)
+        coordinator: MadVRCoordinator = entry.runtime_data
         if coordinator:
-            await cancel_tasks(coordinator.client)
+            await coordinator.async_handle_unload()
 
     return unload_ok
 

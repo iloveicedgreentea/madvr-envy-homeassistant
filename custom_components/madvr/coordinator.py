@@ -8,17 +8,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .utils import cancel_tasks
+
 _LOGGER = logging.getLogger(__name__)
+
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 
 class MadVRCoordinator(DataUpdateCoordinator[dict]):
     """My custom coordinator for push-based API."""
 
-    config_entry: ConfigEntry
+    config_entry: MadVRConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MadVRConfigEntry,
         client: Madvr,
         name: str,
     ) -> None:
@@ -28,7 +33,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
             _LOGGER,
             name="Madvr Coordinator",
         )
-        self.entry_id = self.config_entry.entry_id
+        self.entry_id = config_entry.entry_id
         self.client = client
         self.name = name
         self.client.set_update_callback(self.handle_push_data)
@@ -42,3 +47,12 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
         """Handle new data pushed from the API."""
         _LOGGER.debug("Received push data: %s", data)
         self.async_set_updated_data(data)
+
+    async def async_handle_unload(self):
+        """Handle unload."""
+        _LOGGER.debug("Coordinator unloading")
+        await cancel_tasks(self.client)
+        self.client.stop()
+        _LOGGER.debug("Coordinator closing connection")
+        await self.client.close_connection()
+        _LOGGER.debug("Unloaded")
