@@ -55,6 +55,11 @@ class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
         """Return true if the device is on."""
         return self.coordinator.client.is_on
 
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return "mdi:power" if self.is_on else "mdi:power-off"
+
 
 class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
     """Binary sensor representing the signal state of the MadVR device."""
@@ -70,6 +75,11 @@ class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
         """Return true if the device is receiving a signal."""
         return self.coordinator.data.get("is_signal", False)
 
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return "mdi:signal" if self.is_on else "mdi:signal-off"
+
 
 class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
     """Binary sensor representing the HDR flag state of the MadVR device."""
@@ -84,3 +94,8 @@ class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
     def is_on(self) -> bool:
         """Return true if HDR is detected."""
         return self.coordinator.data.get("hdr_flag", False)
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return "mdi:hdr" if self.is_on else "mdi:hdr-off"
