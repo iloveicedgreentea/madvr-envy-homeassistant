@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import MadVRCoordinator
 
-PLATFORMS: list[Platform] = [Platform.REMOTE]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SENSOR]
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
