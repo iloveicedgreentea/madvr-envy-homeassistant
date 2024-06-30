@@ -1,20 +1,33 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Failed to connect to the device. Please ensure the device is ON or check the connection settings."
         },
         "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
-                }
+                    "mac": "MAC Address",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "description": "Make sure your device is ON so we can test the connection.",
+                "title": "Setup MadVR Envy"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Adjust the settings for your device.",
+                "title": "Edit Configuration"
             }
         }
     }
