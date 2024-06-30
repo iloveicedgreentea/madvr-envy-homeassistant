@@ -1,17 +1,17 @@
 """Sensor entities for the MadVR integration."""
 
-import logging
-
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import MadVRCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -46,6 +46,11 @@ async def async_setup_entry(
             MadvrMaskingIntSensor(coordinator, entry.entry_id),
             MadvrProfileNameSensor(coordinator, entry.entry_id),
             MadvrProfileNumSensor(coordinator, entry.entry_id),
+            MadvrMAC(coordinator, entry.entry_id),
+            MadvrTempGPU(coordinator, entry.entry_id),
+            MadvrTempCPU(coordinator, entry.entry_id),
+            MadvrTempHDMI(coordinator, entry.entry_id),
+            MadvrTempMainboard(coordinator, entry.entry_id),
         ]
     )
 
@@ -63,13 +68,107 @@ class MadvrBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = unique_id
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        val: str = self.coordinator.data.get(self._key, "")
-        return val
+        if self.coordinator.data:
+            val: str = self.coordinator.data.get(self._key, "")
+            return val
+
+
+class MadvrTempSensor(MadvrBaseSensor):
+    """Base class for MadVR temperature sensors."""
+
+    def __init__(
+        self, coordinator: MadVRCoordinator, name: str, key: str, unique_id: str
+    ) -> None:
+        super().__init__(coordinator, name, key, unique_id)
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            temp = self.coordinator.data.get(self._key)
+            if temp is not None:
+                try:
+                    return float(temp)
+                except ValueError:
+                    return None
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.native_value is not None
 
 
 # ruff: noqa: D107
+# mac
+class MadvrMAC(MadvrBaseSensor):
+    """Sensor for MAC."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        super().__init__(
+            coordinator,
+            f"{coordinator.name} MAC Address",
+            "mac_address",
+            f"{entry_id}_mac_address",
+        )
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend."""
+        return "mdi:server-network"
+
+
+# temps
+class MadvrTempGPU(MadvrTempSensor):
+    """Sensor for gpu temp."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        super().__init__(
+            coordinator,
+            f"{coordinator.name} GPU Temperature",
+            "temp_gpu",
+            f"{entry_id}_temp_gpu",
+        )
+
+
+class MadvrTempHDMI(MadvrTempSensor):
+    """Sensor for hdmi temp."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        super().__init__(
+            coordinator,
+            f"{coordinator.name} HDMI Temperature",
+            "temp_hdmi",
+            f"{entry_id}_temp_hdmi",
+        )
+
+
+class MadvrTempCPU(MadvrTempSensor):
+    """Sensor for CPU temp."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        super().__init__(
+            coordinator,
+            f"{coordinator.name} CPU Temperature",
+            "temp_cpu",
+            f"{entry_id}_temp_cpu",
+        )
+
+
+class MadvrTempMainboard(MadvrTempSensor):
+    """Sensor for mainboard temp."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        super().__init__(
+            coordinator,
+            f"{coordinator.name} Mainboard Temperature",
+            "temp_mainboard",
+            f"{entry_id}_temp_mainboard",
+        )
 
 
 class MadvrIncomingResSensor(MadvrBaseSensor):

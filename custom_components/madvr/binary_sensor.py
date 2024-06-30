@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
@@ -51,12 +50,13 @@ class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the device is on."""
-        return self.coordinator.client.is_on
+        if self.coordinator.data:
+            return self.coordinator.client.is_on
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:power" if self.is_on else "mdi:power-off"
 
@@ -71,12 +71,13 @@ class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the device is receiving a signal."""
-        return self.coordinator.data.get("is_signal", False)
+        if self.coordinator.data:
+            return self.coordinator.data.get("is_signal", False)
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"
 
@@ -91,11 +92,12 @@ class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if HDR is detected."""
-        return self.coordinator.data.get("hdr_flag", False)
+        if self.coordinator.data:
+            return self.coordinator.data.get("hdr_flag", False)
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:hdr" if self.is_on else "mdi:hdr-off"
