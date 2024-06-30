@@ -9,14 +9,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MadVRConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor entities."""
-    coordinator: MadVRCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             MadvrPowerStateBinarySensor(coordinator, entry.entry_id),
