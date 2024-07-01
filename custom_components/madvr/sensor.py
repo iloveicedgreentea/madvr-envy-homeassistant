@@ -6,8 +6,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,7 +34,6 @@ async def async_setup_entry(
             MadvrOutgoingFrameRateSensor(coordinator, entry.entry_id),
             MadvrOutgoingColorSpaceSensor(coordinator, entry.entry_id),
             MadvrOutgoingBitDepthSensor(coordinator, entry.entry_id),
-            MadvrOutgoingHDRFlagSensor(coordinator, entry.entry_id),
             MadvrOutgoingColorimetrySensor(coordinator, entry.entry_id),
             MadvrOutgoingBlackLevelsSensor(coordinator, entry.entry_id),
             MadvrAspectResSensor(coordinator, entry.entry_id),
@@ -115,11 +114,13 @@ class MadvrMAC(MadvrBaseSensor):
             "mac_address",
             f"{entry_id}_mac_address",
         )
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_has_entity_name = True
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
-        return "mdi:server-network"
+        return "mdi:ethernet"
 
 
 # temps
@@ -300,18 +301,6 @@ class MadvrOutgoingBitDepthSensor(MadvrBaseSensor):
             f"{coordinator.name} Outgoing Bit Depth",
             "outgoing_bit_depth",
             f"{entry_id}_outgoing_bit_depth",
-        )
-
-
-class MadvrOutgoingHDRFlagSensor(MadvrBaseSensor):
-    """Sensor for outgoing HDR flag."""
-
-    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing HDR Flag",
-            "outgoing_hdr_flag",
-            f"{entry_id}_outgoing_hdr_flag",
         )
 
 

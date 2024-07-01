@@ -101,3 +101,24 @@ class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:hdr" if self.is_on else "mdi:hdr-off"
+
+
+class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
+    """Binary sensor representing the outgoing HDR flag state of the MadVR device. If True, that means the device is *sending* HDR."""
+
+    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+        """Initialize the HDR flag binary sensor."""
+        super().__init__(
+            coordinator, f"{coordinator.name} HDR Flag", f"{entry_id}_hdr_flag"
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if HDR is detected."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("outgoing_hdr_flag", False)
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend."""
+        return "mdi:hdr" if self.is_on else "mdi:hdr-off"
