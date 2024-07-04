@@ -23,6 +23,7 @@ async def async_setup_entry(
             MadvrPowerStateBinarySensor(coordinator, entry.entry_id),
             MadvrSignalStateBinarySensor(coordinator, entry.entry_id),
             MadvrHDRFlagBinarySensor(coordinator, entry.entry_id),
+            MadvrHDROutgoingFlagBinarySensor(coordinator, entry.entry_id),
         ]
     )
 
@@ -54,6 +55,7 @@ class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
         """Return true if the device is on."""
         if self.coordinator.data:
             return self.coordinator.client.is_on
+        return None
 
     @property
     def icon(self) -> str | None:
@@ -75,6 +77,7 @@ class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
         """Return true if the device is receiving a signal."""
         if self.coordinator.data:
             return self.coordinator.data.get("is_signal", False)
+        return None
 
     @property
     def icon(self) -> str | None:
@@ -97,6 +100,8 @@ class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
         if self.coordinator.data:
             return self.coordinator.data.get("hdr_flag", False)
 
+        return None
+
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
@@ -107,9 +112,11 @@ class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
     """Binary sensor representing the outgoing HDR flag state of the MadVR device. If True, that means the device is *sending* HDR."""
 
     def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
-        """Initialize the HDR flag binary sensor."""
+        """Initialize the outgoing HDR flag binary sensor."""
         super().__init__(
-            coordinator, f"{coordinator.name} HDR Flag", f"{entry_id}_hdr_flag"
+            coordinator,
+            f"{coordinator.name} Outgoing HDR Flag",
+            f"{entry_id}_outgoing_hdr_flag",
         )
 
     @property
@@ -117,6 +124,8 @@ class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
         """Return true if HDR is detected."""
         if self.coordinator.data:
             return self.coordinator.data.get("outgoing_hdr_flag", False)
+
+        return None
 
     @property
     def icon(self) -> str | None:

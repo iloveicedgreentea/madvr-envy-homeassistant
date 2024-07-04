@@ -6,8 +6,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -67,11 +67,12 @@ class MadvrBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = unique_id
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
             val: str = self.coordinator.data.get(self._key, "")
             return val
+        return None
 
 
 class MadvrTempSensor(MadvrBaseSensor):
@@ -85,7 +86,7 @@ class MadvrTempSensor(MadvrBaseSensor):
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
             temp = self.coordinator.data.get(self._key)
@@ -95,11 +96,6 @@ class MadvrTempSensor(MadvrBaseSensor):
                 except ValueError:
                     return None
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.native_value is not None
 
 
 # ruff: noqa: D107
