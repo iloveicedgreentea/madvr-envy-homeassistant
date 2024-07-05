@@ -7,12 +7,19 @@ import logging
 from madvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .coordinator import MadVRCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.REMOTE, Platform.SENSOR, Platform.BINARY_SENSOR]
+
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
@@ -35,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
         port=entry.data[CONF_PORT],
-        mac=entry.data.get("mac", ""),
+        mac=entry.data[CONF_MAC],
         connect_timeout=10,
         loop=hass.loop,
     )
@@ -66,8 +73,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
         await async_handle_unload(coordinator=coordinator)
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> None:
-    """Reload a config entry."""
-    await async_unload_entry(hass, entry)
