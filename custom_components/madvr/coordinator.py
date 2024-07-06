@@ -1,12 +1,12 @@
 """Coordinator for handling data fetching and updates."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from madvr.madvr import Madvr
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -14,7 +14,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+if TYPE_CHECKING:
+    from . import MadVRConfigEntry
 
 
 class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -29,9 +30,8 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize madvr coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
-        self.entry_id = self.config_entry.entry_id
-        # get the mac address from the config entry
-        self.mac = self.config_entry.data.get(CONF_MAC)
+        self.mac = self.config_entry.unique_id
+        assert self.mac
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)
