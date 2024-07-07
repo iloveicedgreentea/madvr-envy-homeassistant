@@ -1,4 +1,4 @@
-"""Sensor entities for the MadVR integration."""
+"""Sensor entities for the madVR integration."""
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 class MadvrBaseSensor(CoordinatorEntity, SensorEntity):
-    """Base class for MadVR sensors."""
+    """Base class for madVR sensors."""
 
     _attr_has_entity_name = True
     coordinator: MadVRCoordinator
@@ -93,7 +93,7 @@ class MadvrBaseSensor(CoordinatorEntity, SensorEntity):
 
 # ruff: noqa: D107
 class MadvrTempSensor(MadvrBaseSensor):
-    """Base class for MadVR temperature sensors."""
+    """Base class for madVR temperature sensors."""
 
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 

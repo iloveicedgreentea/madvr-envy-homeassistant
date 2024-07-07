@@ -1,4 +1,4 @@
-"""Binary sensor entities for the MadVR integration."""
+"""Binary sensor entities for the madVR integration."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +31,7 @@ async def async_setup_entry(
 
 
 class MadvrBaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Base class for MadVR binary sensors."""
+    """Base class for madVR binary sensors."""
 
     _attr_has_entity_name = True
     coordinator: MadVRCoordinator
@@ -55,7 +55,7 @@ class MadvrBaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
 
 class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the power state of the MadVR device."""
+    """Binary sensor representing the power state of the madVR device."""
 
     def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the power state binary sensor."""
@@ -73,7 +73,7 @@ class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
 
 
 class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the signal state of the MadVR device."""
+    """Binary sensor representing the signal state of the madVR device."""
 
     def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the signal state binary sensor."""
@@ -95,7 +95,7 @@ class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
 
 
 class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the HDR flag state of the MadVR device."""
+    """Binary sensor representing the HDR flag state of the madVR device."""
 
     def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the HDR flag binary sensor."""
@@ -115,7 +115,7 @@ class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
 
 
 class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the outgoing HDR flag state of the MadVR device."""
+    """Binary sensor representing the outgoing HDR flag state of the madVR device."""
 
     def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the outgoing HDR flag binary sensor."""
