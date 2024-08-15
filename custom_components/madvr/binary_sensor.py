@@ -1,8 +1,9 @@
-"""Binary sensor entities for the MadVR integration."""
+"""Binary sensor entities for the madVR integration."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,81 +22,117 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         [
-            MadvrPowerStateBinarySensor(coordinator, entry.entry_id),
-            MadvrSignalStateBinarySensor(coordinator, entry.entry_id),
-            MadvrHDRFlagBinarySensor(coordinator, entry.entry_id),
+            MadvrPowerStateBinarySensor(coordinator),
+            MadvrSignalStateBinarySensor(coordinator),
+            MadvrHDRFlagBinarySensor(coordinator),
+            MadvrHDROutgoingFlagBinarySensor(coordinator),
         ]
     )
 
 
 class MadvrBaseBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Base class for MadVR binary sensors."""
+    """Base class for madVR binary sensors."""
 
-    def __init__(
-        self, coordinator: MadVRCoordinator, name: str, unique_id: str
-    ) -> None:
+    _attr_has_entity_name = True
+    coordinator: MadVRCoordinator
+
+    def __init__(self, coordinator: MadVRCoordinator, name: str, key: str) -> None:
         """Initialize the base binary sensor."""
         super().__init__(coordinator)
         self._attr_name = name
-        self._attr_unique_id = unique_id
-        self.coordinator: MadVRCoordinator = coordinator
+        self._key = key
+        self._attr_unique_id = f"{coordinator.mac}_{key}"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.mac)},
+            name="madVR Envy",
+            manufacturer="madVR",
+            model="Envy",
+        )
 
 
 class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the power state of the MadVR device."""
+    """Binary sensor representing the power state of the madVR device."""
 
-    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the power state binary sensor."""
-        super().__init__(
-            coordinator, f"{coordinator.name} Power State", f"{entry_id}_power_state"
-        )
+        super().__init__(coordinator, f"{coordinator.name} Power State", "power_state")
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the device is on."""
         return self.coordinator.client.is_on
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:power" if self.is_on else "mdi:power-off"
 
 
 class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the signal state of the MadVR device."""
+    """Binary sensor representing the signal state of the madVR device."""
 
-    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the signal state binary sensor."""
         super().__init__(
-            coordinator, f"{coordinator.name} Signal State", f"{entry_id}_signal_state"
+            coordinator, f"{coordinator.name} Signal State", "signal_state"
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the device is receiving a signal."""
-        return self.coordinator.data.get("is_signal", False)
+        if self.coordinator.data:
+            return self.coordinator.data.get("is_signal", False)
+        return None
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"
 
 
 class MadvrHDRFlagBinarySensor(MadvrBaseBinarySensor):
-    """Binary sensor representing the HDR flag state of the MadVR device."""
+    """Binary sensor representing the HDR flag state of the madVR device."""
 
-    def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: MadVRCoordinator) -> None:
         """Initialize the HDR flag binary sensor."""
+        super().__init__(coordinator, f"{coordinator.name} HDR Flag", "hdr_flag")
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if HDR is detected."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("hdr_flag", False)
+        return None
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend."""
+        return "mdi:hdr" if self.is_on else "mdi:hdr-off"
+
+
+class MadvrHDROutgoingFlagBinarySensor(MadvrBaseBinarySensor):
+    """Binary sensor representing the outgoing HDR flag state of the madVR device."""
+
+    def __init__(self, coordinator: MadVRCoordinator) -> None:
+        """Initialize the outgoing HDR flag binary sensor."""
         super().__init__(
-            coordinator, f"{coordinator.name} HDR Flag", f"{entry_id}_hdr_flag"
+            coordinator,
+            f"{coordinator.name} Outgoing HDR Flag",
+            "outgoing_hdr_flag",
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if HDR is detected."""
-        return self.coordinator.data.get("hdr_flag", False)
+        if self.coordinator.data:
+            return self.coordinator.data.get("outgoing_hdr_flag", False)
+        return None
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:hdr" if self.is_on else "mdi:hdr-off"
