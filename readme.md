@@ -1,7 +1,12 @@
 # MadVR Envy Home Assistant
 
-This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
+# Attention
+> [!NOTE] 
+🎉This custom component is now officially in core. https://www.home-assistant.io/integrations/madvr/  This repo is not the right place to get this integration anymore.🎉
 
+
+This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
+  
 ## Features
 
 - Real time Attributes for Incoming Signal, Outgoing Signal, Aspect ratio
