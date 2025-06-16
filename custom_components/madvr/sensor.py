@@ -1,23 +1,254 @@
 """Sensor entities for the madVR integration."""
 
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-
-from .const import DOMAIN
+from . import MadVRConfigEntry
+from .const import (
+    ASPECT_DEC,
+    ASPECT_INT,
+    ASPECT_NAME,
+    ASPECT_RES,
+    INCOMING_ASPECT_RATIO,
+    INCOMING_BIT_DEPTH,
+    INCOMING_BLACK_LEVELS,
+    INCOMING_COLOR_SPACE,
+    INCOMING_COLORIMETRY,
+    INCOMING_FRAME_RATE,
+    INCOMING_RES,
+    INCOMING_SIGNAL_TYPE,
+    MASKING_DEC,
+    MASKING_INT,
+    MASKING_RES,
+    OUTGOING_BIT_DEPTH,
+    OUTGOING_BLACK_LEVELS,
+    OUTGOING_COLOR_SPACE,
+    OUTGOING_COLORIMETRY,
+    OUTGOING_FRAME_RATE,
+    OUTGOING_RES,
+    OUTGOING_SIGNAL_TYPE,
+    TEMP_CPU,
+    TEMP_GPU,
+    TEMP_HDMI,
+    TEMP_MAINBOARD,
+)
 from .coordinator import MadVRCoordinator
+from .entity import MadVREntity
 
-type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+
+def is_valid_temperature(value: float | None) -> bool:
+    """Check if the temperature value is valid."""
+    return value is not None and value > 0
+
+
+def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
+    """Get temperature value if valid, otherwise return None."""
+    try:
+        temp = float(coordinator.data.get(key, 0))
+    except (AttributeError, ValueError):
+        return None
+    else:
+        return temp if is_valid_temperature(temp) else None
+
+
+@dataclass(frozen=True, kw_only=True)
+class MadvrSensorEntityDescription(SensorEntityDescription):
+    """Describe madVR sensor entity."""
+
+    value_fn: Callable[[MadVRCoordinator], StateType]
+
+
+SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
+    MadvrSensorEntityDescription(
+        key=TEMP_GPU,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_GPU),
+        translation_key=TEMP_GPU,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=TEMP_HDMI,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_HDMI),
+        translation_key=TEMP_HDMI,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=TEMP_CPU,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_CPU),
+        translation_key=TEMP_CPU,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=TEMP_MAINBOARD,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda coordinator: get_temperature(coordinator, TEMP_MAINBOARD),
+        translation_key=TEMP_MAINBOARD,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_RES,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_RES),
+        translation_key=INCOMING_RES,
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_SIGNAL_TYPE,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_SIGNAL_TYPE),
+        translation_key=INCOMING_SIGNAL_TYPE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["2D", "3D"],
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_FRAME_RATE,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_FRAME_RATE),
+        translation_key=INCOMING_FRAME_RATE,
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_COLOR_SPACE,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_COLOR_SPACE),
+        translation_key=INCOMING_COLOR_SPACE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["RGB", "444", "422", "420"],
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_BIT_DEPTH,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_BIT_DEPTH),
+        translation_key=INCOMING_BIT_DEPTH,
+        device_class=SensorDeviceClass.ENUM,
+        options=["8bit", "10bit", "12bit"],
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_COLORIMETRY,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_COLORIMETRY),
+        translation_key=INCOMING_COLORIMETRY,
+        device_class=SensorDeviceClass.ENUM,
+        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_BLACK_LEVELS,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_BLACK_LEVELS),
+        translation_key=INCOMING_BLACK_LEVELS,
+        device_class=SensorDeviceClass.ENUM,
+        options=["TV", "PC"],
+    ),
+    MadvrSensorEntityDescription(
+        key=INCOMING_ASPECT_RATIO,
+        value_fn=lambda coordinator: coordinator.data.get(INCOMING_ASPECT_RATIO),
+        translation_key=INCOMING_ASPECT_RATIO,
+        device_class=SensorDeviceClass.ENUM,
+        options=["16:9", "4:3"],
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_RES,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_RES),
+        translation_key=OUTGOING_RES,
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_SIGNAL_TYPE,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_SIGNAL_TYPE),
+        translation_key=OUTGOING_SIGNAL_TYPE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["2D", "3D"],
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_FRAME_RATE,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_FRAME_RATE),
+        translation_key=OUTGOING_FRAME_RATE,
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_COLOR_SPACE,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLOR_SPACE),
+        translation_key=OUTGOING_COLOR_SPACE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["RGB", "444", "422", "420"],
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_BIT_DEPTH,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BIT_DEPTH),
+        translation_key=OUTGOING_BIT_DEPTH,
+        device_class=SensorDeviceClass.ENUM,
+        options=["8bit", "10bit", "12bit"],
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_COLORIMETRY,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_COLORIMETRY),
+        translation_key=OUTGOING_COLORIMETRY,
+        device_class=SensorDeviceClass.ENUM,
+        options=["SDR", "HDR10", "HLG 601", "PAL", "709", "DCI", "2020"],
+    ),
+    MadvrSensorEntityDescription(
+        key=OUTGOING_BLACK_LEVELS,
+        value_fn=lambda coordinator: coordinator.data.get(OUTGOING_BLACK_LEVELS),
+        translation_key=OUTGOING_BLACK_LEVELS,
+        device_class=SensorDeviceClass.ENUM,
+        options=["TV", "PC"],
+    ),
+    MadvrSensorEntityDescription(
+        key=ASPECT_RES,
+        value_fn=lambda coordinator: coordinator.data.get(ASPECT_RES),
+        translation_key=ASPECT_RES,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=ASPECT_DEC,
+        value_fn=lambda coordinator: coordinator.data.get(ASPECT_DEC),
+        translation_key=ASPECT_DEC,
+    ),
+    MadvrSensorEntityDescription(
+        key=ASPECT_INT,
+        value_fn=lambda coordinator: coordinator.data.get(ASPECT_INT),
+        translation_key=ASPECT_INT,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=ASPECT_NAME,
+        value_fn=lambda coordinator: coordinator.data.get(ASPECT_NAME),
+        translation_key=ASPECT_NAME,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=MASKING_RES,
+        value_fn=lambda coordinator: coordinator.data.get(MASKING_RES),
+        translation_key=MASKING_RES,
+        entity_registry_enabled_default=False,
+    ),
+    MadvrSensorEntityDescription(
+        key=MASKING_DEC,
+        value_fn=lambda coordinator: coordinator.data.get(MASKING_DEC),
+        translation_key=MASKING_DEC,
+    ),
+    MadvrSensorEntityDescription(
+        key=MASKING_INT,
+        value_fn=lambda coordinator: coordinator.data.get(MASKING_INT),
+        translation_key=MASKING_INT,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -26,393 +257,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
-    coordinator: MadVRCoordinator = entry.runtime_data
-    async_add_entities(
-        [
-            MadvrIncomingResSensor(coordinator),
-            MadvrIncomingFrameRateSensor(coordinator),
-            MadvrIncomingColorSpaceSensor(coordinator),
-            MadvrIncomingBitDepthSensor(coordinator),
-            MadvrIncomingColorimetrySensor(coordinator),
-            MadvrIncomingBlackLevelsSensor(coordinator),
-            MadvrIncomingAspectRatioSensor(coordinator),
-            MadvrOutgoingResSensor(coordinator),
-            MadvrOutgoingFrameRateSensor(coordinator),
-            MadvrOutgoingColorSpaceSensor(coordinator),
-            MadvrOutgoingBitDepthSensor(coordinator),
-            MadvrOutgoingColorimetrySensor(coordinator),
-            MadvrOutgoingBlackLevelsSensor(coordinator),
-            MadvrAspectResSensor(coordinator),
-            MadvrAspectDecSensor(coordinator),
-            MadvrAspectIntSensor(coordinator),
-            MadvrAspectNameSensor(coordinator),
-            MadvrMaskingResSensor(coordinator),
-            MadvrMaskingDecSensor(coordinator),
-            MadvrMaskingIntSensor(coordinator),
-            MadvrProfileNameSensor(coordinator),
-            MadvrProfileNumSensor(coordinator),
-            MadvrMAC(coordinator),
-            MadvrTempGPU(coordinator),
-            MadvrTempCPU(coordinator),
-            MadvrTempHDMI(coordinator),
-            MadvrTempMainboard(coordinator),
-        ]
-    )
+    coordinator = entry.runtime_data
+    async_add_entities(MadvrSensor(coordinator, description) for description in SENSORS)
 
 
-class MadvrBaseSensor(CoordinatorEntity, SensorEntity):
+class MadvrSensor(MadVREntity, SensorEntity):
     """Base class for madVR sensors."""
 
-    _attr_has_entity_name = True
-    coordinator: MadVRCoordinator
-
-    def __init__(self, coordinator: MadVRCoordinator, name: str, key: str) -> None:
-        """Initialize the base sensor."""
+    def __init__(
+        self,
+        coordinator: MadVRCoordinator,
+        description: MadvrSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._key = key
-        self._attr_unique_id = f"{coordinator.mac}_{key}"
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.mac)},
-            name="madVR Envy",
-            manufacturer="madVR",
-            model="Envy",
-        )
+        self.entity_description: MadvrSensorEntityDescription = description
+        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        if self.coordinator.data:
-            return self.coordinator.data.get(self._key)
-        return None
-
-
-# ruff: noqa: D107
-class MadvrTempSensor(MadvrBaseSensor):
-    """Base class for madVR temperature sensors."""
-
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-    def __init__(self, coordinator: MadVRCoordinator, name: str, key: str) -> None:
-        super().__init__(coordinator, name, key)
-        self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data:
-            temp = self.coordinator.data.get(self._key)
-            if temp is not None:
-                try:
-                    return float(temp)
-                except ValueError:
-                    return None
-        return None
-
-
-class MadvrMAC(MadvrBaseSensor):
-    """Sensor for MAC."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} MAC Address",
-            "mac_address",
-        )
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend."""
-        return "mdi:ethernet"
-
-
-class MadvrTempGPU(MadvrTempSensor):
-    """Sensor for gpu temp."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} GPU Temperature",
-            "temp_gpu",
-        )
-
-
-class MadvrTempHDMI(MadvrTempSensor):
-    """Sensor for hdmi temp."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} HDMI Temperature",
-            "temp_hdmi",
-        )
-
-
-class MadvrTempCPU(MadvrTempSensor):
-    """Sensor for CPU temp."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} CPU Temperature",
-            "temp_cpu",
-        )
-
-
-class MadvrTempMainboard(MadvrTempSensor):
-    """Sensor for mainboard temp."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Mainboard Temperature",
-            "temp_mainboard",
-        )
-
-
-class MadvrIncomingResSensor(MadvrBaseSensor):
-    """Sensor for incoming resolution."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Resolution",
-            "incoming_res",
-        )
-
-
-class MadvrIncomingFrameRateSensor(MadvrBaseSensor):
-    """Sensor for incoming frame rate."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Frame Rate",
-            "incoming_frame_rate",
-        )
-
-
-class MadvrIncomingColorSpaceSensor(MadvrBaseSensor):
-    """Sensor for incoming color space."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Color Space",
-            "incoming_color_space",
-        )
-
-
-class MadvrIncomingBitDepthSensor(MadvrBaseSensor):
-    """Sensor for incoming bit depth."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Bit Depth",
-            "incoming_bit_depth",
-        )
-
-
-class MadvrIncomingColorimetrySensor(MadvrBaseSensor):
-    """Sensor for incoming colorimetry."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Colorimetry",
-            "incoming_colorimetry",
-        )
-
-
-class MadvrIncomingBlackLevelsSensor(MadvrBaseSensor):
-    """Sensor for incoming black levels."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Black Levels",
-            "incoming_black_levels",
-        )
-
-
-class MadvrIncomingAspectRatioSensor(MadvrBaseSensor):
-    """Sensor for incoming aspect ratio."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Incoming Aspect Ratio",
-            "incoming_aspect_ratio",
-        )
-
-
-class MadvrOutgoingResSensor(MadvrBaseSensor):
-    """Sensor for outgoing resolution."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Resolution",
-            "outgoing_res",
-        )
-
-
-class MadvrOutgoingFrameRateSensor(MadvrBaseSensor):
-    """Sensor for outgoing frame rate."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Frame Rate",
-            "outgoing_frame_rate",
-        )
-
-
-class MadvrOutgoingColorSpaceSensor(MadvrBaseSensor):
-    """Sensor for outgoing color space."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Color Space",
-            "outgoing_color_space",
-        )
-
-
-class MadvrOutgoingBitDepthSensor(MadvrBaseSensor):
-    """Sensor for outgoing bit depth."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Bit Depth",
-            "outgoing_bit_depth",
-        )
-
-
-class MadvrOutgoingColorimetrySensor(MadvrBaseSensor):
-    """Sensor for outgoing colorimetry."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Colorimetry",
-            "outgoing_colorimetry",
-        )
-
-
-class MadvrOutgoingBlackLevelsSensor(MadvrBaseSensor):
-    """Sensor for outgoing black levels."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Outgoing Black Levels",
-            "outgoing_black_levels",
-        )
-
-
-class MadvrAspectResSensor(MadvrBaseSensor):
-    """Sensor for aspect ratio resolution."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Aspect Ratio Resolution",
-            "aspect_res",
-        )
-
-
-class MadvrAspectDecSensor(MadvrBaseSensor):
-    """Sensor for aspect ratio decimal value."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Aspect Ratio Decimal",
-            "aspect_dec",
-        )
-
-
-class MadvrAspectIntSensor(MadvrBaseSensor):
-    """Sensor for aspect ratio integer value."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Aspect Ratio Integer",
-            "aspect_int",
-        )
-
-
-class MadvrAspectNameSensor(MadvrBaseSensor):
-    """Sensor for aspect ratio name."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Aspect Ratio Name",
-            "aspect_name",
-        )
-
-
-class MadvrMaskingResSensor(MadvrBaseSensor):
-    """Sensor for masking resolution."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Masking Resolution",
-            "masking_res",
-        )
-
-
-class MadvrMaskingDecSensor(MadvrBaseSensor):
-    """Sensor for masking decimal value."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Masking Decimal",
-            "masking_dec",
-        )
-
-
-class MadvrMaskingIntSensor(MadvrBaseSensor):
-    """Sensor for masking integer value."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Masking Integer",
-            "masking_int",
-        )
-
-
-class MadvrProfileNameSensor(MadvrBaseSensor):
-    """Sensor for profile name."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Profile Name",
-            "profile_name",
-        )
-
-
-class MadvrProfileNumSensor(MadvrBaseSensor):
-    """Sensor for profile number."""
-
-    def __init__(self, coordinator: MadVRCoordinator) -> None:
-        super().__init__(
-            coordinator,
-            f"{coordinator.name} Profile Number",
-            "profile_num",
-        )
+        val = self.entity_description.value_fn(self.coordinator)
+        # check if sensor is enum
+        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+            if (
+                self.entity_description.options
+                and val in self.entity_description.options
+            ):
+                return val
+            # return None for values that are not in the options
+            return None
+
+        return val
