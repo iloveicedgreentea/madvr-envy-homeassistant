@@ -2,7 +2,7 @@
 
 # Attention
 > [!NOTE] 
-🎉This custom component is now officially in core. https://www.home-assistant.io/integrations/madvr/  This repo is not the right place to get this integration anymore.🎉
+This custom component is now officially in core. https://www.home-assistant.io/integrations/madvr/. However due to their review policies and speed of releases I will ONLY be maintaining this custom component from now on.
 
 
 This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
