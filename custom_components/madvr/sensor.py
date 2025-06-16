@@ -296,8 +296,8 @@ class MadvrSensor(MadVREntity, SensorEntity):
         # Get the new value
         new_value = self.native_value
         
-        # Only trigger update if value has changed
-        if new_value != self._previous_value:
+        # Always update on first run (when _previous_value is None)
+        # or when value has actually changed
+        if self._previous_value is None or new_value != self._previous_value:
             self._previous_value = new_value
             super()._handle_coordinator_update()
-        # Otherwise skip the update to save resources

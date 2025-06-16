@@ -88,9 +88,9 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._pending_update = None
                 self._last_update_time = self.hass.loop.time()
                 
-                # Only update if data has actually changed
-                if data != self.data:
-                    self.async_set_updated_data(data)
+                # Always update - remove the data comparison that's blocking updates
+                # The sensor-level filtering will handle duplicate prevention
+                self.async_set_updated_data(data)
 
     async def handle_coordinator_load(self) -> None:
         """Handle operations on integration load."""
