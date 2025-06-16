@@ -273,6 +273,7 @@ class MadvrSensor(MadVREntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description: MadvrSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        self._previous_value = None
 
     @property
     def native_value(self) -> float | str | None:
@@ -289,3 +290,14 @@ class MadvrSensor(MadVREntity, SensorEntity):
             return None
 
         return val
+    
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Get the new value
+        new_value = self.native_value
+        
+        # Only trigger update if value has changed
+        if new_value != self._previous_value:
+            self._previous_value = new_value
+            super()._handle_coordinator_update()
+        # Otherwise skip the update to save resources
