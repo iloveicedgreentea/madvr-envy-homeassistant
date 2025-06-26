@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from madvr.madvr import Madvr
+from pymadvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
