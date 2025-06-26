@@ -9,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "requirements": [
-    "pymadvr==1.8.1"
+    "py-madvr2==1.8.1"
   ],
   "version": "0.1.0"
 }
