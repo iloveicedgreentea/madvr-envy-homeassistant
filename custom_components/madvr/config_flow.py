@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 import aiohttp
-from madvr.madvr import HeartBeatError, Madvr
+from pymadvr.madvr import Madvr
+from pymadvr.errors import HeartBeatError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult

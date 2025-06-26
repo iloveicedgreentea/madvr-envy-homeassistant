@@ -44,6 +44,7 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
         self._attr_unique_id = coordinator.mac
+        self.coordinator = coordinator
 
     @property
     def is_on(self) -> bool:
