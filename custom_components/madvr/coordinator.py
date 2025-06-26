@@ -54,13 +54,14 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Safety check: reject extremely large data payloads
         try:
             import sys
+
             data_size = sys.getsizeof(data)
             if data_size > 1_000_000:  # 1MB limit
                 _LOGGER.warning("Rejecting oversized data payload: %d bytes", data_size)
                 return
         except Exception:
             pass  # Continue if size check fails
-            
+
         # Store the pending update and schedule processing
         self._pending_update = data
         # Use Home Assistant's event loop to schedule the update
@@ -73,21 +74,23 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with self._update_lock:
             if self._pending_update is None:
                 return
-                
+
             # Check rate limit
             current_time = self.hass.loop.time()
             time_since_last = current_time - self._last_update_time
-            
+
             if time_since_last < MIN_TIME_BETWEEN_UPDATES.total_seconds():
                 # Schedule update for later
-                await asyncio.sleep(MIN_TIME_BETWEEN_UPDATES.total_seconds() - time_since_last)
-            
+                await asyncio.sleep(
+                    MIN_TIME_BETWEEN_UPDATES.total_seconds() - time_since_last
+                )
+
             # Process the update
             if self._pending_update is not None:
                 data = self._pending_update
                 self._pending_update = None
                 self._last_update_time = self.hass.loop.time()
-                
+
                 # Always update - remove the data comparison that's blocking updates
                 # The sensor-level filtering will handle duplicate prevention
                 self.async_set_updated_data(data)
@@ -98,17 +101,16 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             # tell the library to start background tasks
             await self.client.async_add_tasks()
-            _LOGGER.debug("Added %s tasks to client", len(self.client.tasks))
         except Exception as e:
             _LOGGER.error("Failed to start background tasks: %s", e)
             # Clean up on failure
             self.cleanup()
             raise
-        
+
     def cleanup(self) -> None:
         """Clean up resources to prevent memory leaks."""
         # Clear pending updates
         self._pending_update = None
         # Clear the update callback to break circular references
-        if hasattr(self.client, 'set_update_callback'):
+        if hasattr(self.client, "set_update_callback"):
             self.client.set_update_callback(None)
