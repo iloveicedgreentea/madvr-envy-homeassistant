@@ -20,6 +20,7 @@ _HDR_FLAG = "hdr_flag"
 _OUTGOING_HDR_FLAG = "outgoing_hdr_flag"
 _POWER_STATE = "power_state"
 _SIGNAL_STATE = "signal_state"
+_STANDBY_STATE = "standby_state"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,6 +50,12 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
         key=_OUTGOING_HDR_FLAG,
         translation_key=_OUTGOING_HDR_FLAG,
         value_fn=lambda coordinator: coordinator.data.get("outgoing_hdr_flag", False),
+    ),
+    MadvrBinarySensorEntityDescription(
+        key=_STANDBY_STATE,
+        translation_key=_STANDBY_STATE,
+        value_fn=lambda coordinator: coordinator.data.get("standby", False),
+        entity_registry_enabled_default=False,
     ),
 )
 

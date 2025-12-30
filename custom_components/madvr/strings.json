@@ -49,6 +49,9 @@
       },
       "signal_state": {
         "name": "Signal state"
+      },
+      "standby_state": {
+        "name": "Standby"
       }
     },
     "sensor": {
