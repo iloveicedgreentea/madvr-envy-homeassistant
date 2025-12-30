@@ -54,7 +54,7 @@ BINARY_SENSORS: tuple[MadvrBinarySensorEntityDescription, ...] = (
     MadvrBinarySensorEntityDescription(
         key=_STANDBY_STATE,
         translation_key=_STANDBY_STATE,
-        value_fn=lambda coordinator: coordinator.client.is_standby,
+        value_fn=lambda coordinator: coordinator.data.get("standby", False),
         entity_registry_enabled_default=False,
     ),
 )

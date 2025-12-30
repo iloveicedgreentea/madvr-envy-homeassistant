@@ -51,13 +51,6 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         """Return true if the device is on."""
         return self.madvr_client.is_on
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "is_standby": self.madvr_client.is_standby,
-        }
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off")
