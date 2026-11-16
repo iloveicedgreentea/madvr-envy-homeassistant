@@ -2,7 +2,7 @@
 
 # Attention
 > [!NOTE] 
-This custom component is now officially in core. https://www.home-assistant.io/integrations/madvr/. However due to their review policies and speed of releases I will ONLY be maintaining this custom component from now on.
+I am maintaining this custom component only.
 
 
 This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
@@ -28,8 +28,6 @@ Turn off Envy via IP control
 Create remotes inside HA Dashboard to send commands like Menu, Right, etc. Basically remake the remote in the UI. 
 
 ## Installation
-
-This is currently only a custom component. Unlikely to make it into HA core because their process is just too burdensome and I strongly disagree with their deployment model for integrations.
 
 Install HACS, then install the component by adding this as a custom repo
 https://hacs.xyz/docs/faq/custom_repositories
