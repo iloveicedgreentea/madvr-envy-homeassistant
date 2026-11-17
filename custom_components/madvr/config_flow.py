@@ -6,14 +6,14 @@ import logging
 from typing import Any
 
 import aiohttp
-from pymadvr.madvr import Madvr
-from pymadvr.errors import HeartBeatError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from ._vendor.pymadvr.errors import HeartBeatError
+from ._vendor.pymadvr.madvr import Madvr
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .errors import CannotConnect
 
@@ -76,14 +76,12 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_mac"
                 else:
                     _LOGGER.debug("MAC address found: %s", mac)
-                    # abort if the detected mac differs from the one in the entry
                     if self.entry:
                         existing_mac = self.entry.unique_id
                         if existing_mac != mac:
                             _LOGGER.debug(
                                 "MAC address changed from %s to %s", existing_mac, mac
                             )
-                            # abort
                             return self.async_abort(reason="set_up_new_device")
 
                         _LOGGER.debug("Reconfiguration done")
@@ -92,7 +90,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
                             data={**user_input, CONF_HOST: host, CONF_PORT: port},
                             reason="reconfigure_successful",
                         )
-                    # abort if already configured with same mac
                     await self.async_set_unique_id(mac)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -115,39 +112,26 @@ async def test_connection(hass: HomeAssistant, host: str, port: int) -> str:
     """Test if we can connect to the device and grab the mac."""
     madvr_client = Madvr(host=host, port=port, loop=hass.loop)
     _LOGGER.debug("Testing connection to madVR at %s:%s", host, port)
-    # try to connect
     try:
         await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
-    # connection can raise HeartBeatError if the device is not available or connection does not work
+        if not madvr_client.connected:
+            raise CannotConnect("Connection failed")
+
+        retry_time = 15
+        while not madvr_client.mac_address and retry_time > 0:
+            await asyncio.sleep(RETRY_INTERVAL)
+            retry_time -= 1
+
+        return madvr_client.mac_address
     except (TimeoutError, aiohttp.ClientError, OSError, HeartBeatError) as err:
         _LOGGER.error("Error connecting to madVR: %s", err)
         raise CannotConnect from err
-
-    # check if we are connected
-    if not madvr_client.connected:
-        raise CannotConnect("Connection failed")
-
-    # background tasks needed to capture realtime info
-    await madvr_client.async_add_tasks()
-
-    # wait for client to capture device info
-    retry_time = 15
-    while not madvr_client.mac_address and retry_time > 0:
-        await asyncio.sleep(RETRY_INTERVAL)
-        retry_time -= 1
-
-    mac_address = madvr_client.mac_address
-    if mac_address:
-        _LOGGER.debug("Connected to madVR with MAC: %s", mac_address)
-    # close this connection because this client object will not be reused
-    await close_test_connection(madvr_client)
-    _LOGGER.debug("Connection test successful")
-    return mac_address
+    finally:
+        await close_test_connection(madvr_client)
 
 
 async def close_test_connection(madvr_client: Madvr) -> None:
     """Close the test connection."""
     _LOGGER.debug("Closing test connection")
     madvr_client.stop()
-    await madvr_client.async_cancel_tasks()
     await madvr_client.close_connection()

@@ -1,0 +1,2 @@
+# Python 3.14; this plugin pins its matching Home Assistant version.
+pytest-homeassistant-custom-component==0.13.375

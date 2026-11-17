@@ -1,0 +1,35 @@
+{
+  "library_version": "2.0.0b1",
+  "source_commit": "df07bc1acaa5cbcbc223c108e4ce3fd9884a3c86",
+  "source_files_sha256": {
+    "LICENSE": "bfc3260a25dd3ffb3c7bd05c724d18a9ebb5c5c446761f76af8a6328087e2529",
+    "__init__.py": "db4c6bab338f35a9077bb5b31b5ef292a166c3f6b60073ae1edeaa1f21b94f84",
+    "commands.py": "2718ad295b5f82c29fce762ef7fd90aa36bc98304b869cb2758297cbf8aabb35",
+    "connection_pool.py": "1b89d0d22c3c39cdd1fd89c5aab816e77117afe5eec61554d636a6ec14e348fd",
+    "consts.py": "1ccb8773ffeb36b3aa86dd563c0f9463bcac8b9382fda306db05d4e80aae0617",
+    "errors.py": "7cad2f60e80035d6f873cddab0dfd6f7d0ff41db624afe38777217d8478ef4fc",
+    "madvr.py": "ec4910e909cc618dd9fb433aa1dea751920d32f26d0a86c98c1044dfc2acd731",
+    "notifications.py": "6245051d593a4355159e3278ed1710acb551d23d6eb1c9ce24b9401accd4fe52",
+    "py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "setup.py": "5b022c35af562c684643630f44fb5cecde1335569a9d875c757679a272bc0801",
+    "simple_pool.py": "65e91f65536cc5f2cb3c999ed606c24f2ed2b93a08a6107efd80b6396385c3d0",
+    "wol.py": "27c8ef3016e5da2f55aca9c56fbdd775e1b5984cdbc9df2506a53ef19b1f73e2"
+  },
+  "source_modified": false,
+  "source_repository": "https://github.com/iloveicedgreentea/py-madvr",
+  "source_sha256": "bca0e29c31f159e0abb3ca78aa54153acfcea119d53987af5dabe1c42dfe7175",
+  "transform": "Replace top-level 'from pymadvr.' imports with 'from .'",
+  "vendored_files_sha256": {
+    "LICENSE": "bfc3260a25dd3ffb3c7bd05c724d18a9ebb5c5c446761f76af8a6328087e2529",
+    "__init__.py": "db4c6bab338f35a9077bb5b31b5ef292a166c3f6b60073ae1edeaa1f21b94f84",
+    "commands.py": "2718ad295b5f82c29fce762ef7fd90aa36bc98304b869cb2758297cbf8aabb35",
+    "connection_pool.py": "671617cd704d870d16f52354c0a6c522311a0713e2fcf8aaf665a279db049544",
+    "consts.py": "1ccb8773ffeb36b3aa86dd563c0f9463bcac8b9382fda306db05d4e80aae0617",
+    "errors.py": "7cad2f60e80035d6f873cddab0dfd6f7d0ff41db624afe38777217d8478ef4fc",
+    "madvr.py": "8c7c0105f628b9e458fa0517a4b8ba4f6e5cfc4475ee0374d3dff49c0ca02073",
+    "notifications.py": "6245051d593a4355159e3278ed1710acb551d23d6eb1c9ce24b9401accd4fe52",
+    "py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "simple_pool.py": "0e5fc1927ab20345288ee35cbc87c6c450ba240ff401386f55ea1f662ac22ad8",
+    "wol.py": "27c8ef3016e5da2f55aca9c56fbdd775e1b5984cdbc9df2506a53ef19b1f73e2"
+  }
+}
