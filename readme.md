@@ -1,255 +1,83 @@
-# MadVR Envy Home Assistant
+# madVR Envy for Home Assistant
 
-# Attention
-> [!NOTE] 
-I am maintaining this custom component only.
+Control an Envy over the local network and use its signal, aspect-ratio, HDR,
+temperature, and power sensors in automations.
 
+## Install
 
-This is the Home Assistant MadVR Envy Component implementing my [MadVR Envy](https://github.com/iloveicedgreentea/py-madvr) library
-  
-## Features
+Add this repository to HACS as a custom integration, or copy the entire
+`custom_components/madvr` folder into your Home Assistant config. Restart Home
+Assistant, then add **madVR Envy** under **Settings → Devices & services** while
+the Envy is powered on. Keep an existing integration entry when upgrading.
 
-- Real time Attributes for Incoming Signal, Outgoing Signal, Aspect ratio
-- Wake on lan built in
-- HDR Flag to trigger brightness automation
-- Power off, standby
-- Navigation Keys
-- Profiles
-- Menu
-- etc
+Version `2.0.0b1` bundles the matching `pymadvr` library privately. It needs no
+separate library installation or PyPI release. See [bundle installation and
+rollback](docs/testing.md) for the ZIP builder and mounted-volume installer.
 
-## Why use this?
-Automate your theater based on Envy attributes like HDR flag, aspect ratio etc. E.x If hdr_flag = true, set JVC picture mode to XYZ. The HDR flag for the envy is broken for NZ models so this is really useful.
+## Remote commands
 
-You can also trigger masking systems based on the aspect ratio reported by Envy
-
-Turn off Envy via IP control
-
-Create remotes inside HA Dashboard to send commands like Menu, Right, etc. Basically remake the remote in the UI. 
-
-## Installation
-
-Install HACS, then install the component by adding this as a custom repo
-https://hacs.xyz/docs/faq/custom_repositories
-
-You can also just copy all the files into your custom_components folder but then you won't get automatic updates.
-
-### Home Assistant Setup
-Add this to configuration.yaml
-
-I recommend a scan_interval of 3
+Use `remote.send_command` with the Envy's remote entity. Existing comma-separated
+commands still work:
 
 ```yaml
-remote:
-  - platform: madvr
-    name: envy
-    host: 192.168.88.38
-    mac: (mac addr)
-    scan_interval: 3
+action: remote.send_command
+target:
+  entity_id: remote.envy
+data:
+  command: "OpenMenu, Profiles"
 ```
 
-When you call the remote.turn_off service, it will shut down the Envy and also close the TCP connection.
+Source and display profiles use `ActivateProfile, SOURCE, 2` and
+`ActivateProfile, DISPLAY, 1`. Custom profile groups use their numeric group ID,
+for example `ActivateProfile, 1, 2`. Use the Envy's actual profile IDs.
 
-## Profiles and 3D support
+The bundled library also supports aspect-ratio overrides, on-screen alerts,
+profile enumeration and editing, and option query/change/inherit commands.
+See the [library documentation](https://github.com/iloveicedgreentea/py-madvr)
+and [Envy IP control reference](https://madvr.com/EnvyIpControl.pdf).
 
-Set your profile to Source 2
+## Dashboard remote and held keys
 
-For the following settings, save them to Source 2
-Resolution: 1080p
-Menu: optimized for 1080p
-Screen Boundaries: None
+Paste [`examples/envy-remote.yaml`](examples/envy-remote.yaml) into a dashboard
+Manual card and replace `remote.envy` with your entity ID. All 13 buttons include
+tap `KeyPress` and hold `KeyHold` actions.
 
-Then use this plugin to send
+**`KeyHold` is one Envy long-press event. It does not repeatedly move through a
+menu.** The standard HA Button card fires its hold action once after release.
+What a native long press does depends on the Envy key and current menu.
 
-`ActivateProfile, SOURCE, 2`
-
-You can switch between 1 and 2 for 3d or 2d easily
-
-You can also use CUSTOM and use your own profile groups.
-## Automate JVC Picture Modes for HDR
-```yaml
-alias: JVC - Envy picture mode HDR
-description: ""
-trigger:
-  - platform: state
-    entity_id:
-      - remote.envy
-    attribute: hdr_flag
-condition: []
-action:
-  - if:
-      - condition: state
-        entity_id: remote.envy
-        attribute: hdr_flag
-        state: true
-    then:
-      - service: remote.send_command
-        data:
-          command: picture_mode,user2
-        target:
-          entity_id: remote.nz7
-  - if:
-      - condition: state
-        entity_id: remote.envy
-        attribute: hdr_flag
-        state: false
-    then:
-      - service: remote.send_command
-        data:
-          command: picture_mode,user1
-        target:
-          entity_id: remote.nz7
-mode: single
-```
-
-## Useful Stuff
-
-I wrote this for my NZ7 but you can change the commands to Envy commands and it will work the same way.
-
-I used this to re-create a remote in HA. Add the YAML to your dashboard to get a grid which resembles most of the remote. Other functions can be used via remote.send_command. See the library readme for details.
-
-This is just an example. Add this sensor to your configuration.yml. Replace the nz7 with the name of your entity. Restart HA.
-
-Add this to lovelace
+To add a native long press to an existing button, put this beside its
+`tap_action`:
 
 ```yaml
-square: false
-columns: 3
-type: grid
-cards:
-  - type: button
-    name: Power
-    show_icon: false
-    entity: remote.nz7
-    show_state: true
-    show_name: true
-    icon: mdi:power
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu,up
-      target:
-        entity_id: remote.nz7
-    show_name: false
-    show_icon: true
-    icon: mdi:arrow-up
-    hold_action:
-      action: none
-  - type: button
-    tap_action:
-      action: none
-    show_icon: false
-    entity: sensor.jvc_low_latency
-    show_name: true
-    show_state: true
-    name: Low Latency
-    hold_action:
-      action: none
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu,left
-      target:
-        entity_id: remote.nz7
-    show_name: false
-    icon: mdi:arrow-left
-  - show_name: false
-    show_icon: true
-    type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu, ok
-      target:
-        entity_id: remote.nz7
-    name: OK
-    icon: mdi:checkbox-blank-circle
-    show_state: true
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu, right
-      target:
-        entity_id: remote.nz7
-    show_name: false
-    icon: mdi:arrow-right
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu,back
-      target:
-        entity_id: remote.nz7
-    name: Back
-    show_icon: false
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu,down
-      target:
-        entity_id: remote.nz7
-    show_name: false
-    icon: mdi:arrow-down
-  - type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: menu,menu
-      target:
-        entity_id: remote.nz7
-    show_name: true
-    show_icon: false
-    name: Menu
-    hold_action:
-      action: none
-  - show_name: true
-    show_icon: true
-    type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: installation_mode,mode5
-      target:
-        entity_id: remote.nz7
-    name: '17:9'
-    icon: mdi:television
-    show_state: false
-  - show_name: true
-    show_icon: true
-    type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: installation_mode,mode4
-      target:
-        entity_id: remote.nz7
-    name: 2.4:1
-    icon: mdi:television
-    show_state: false
-  - show_name: true
-    show_icon: true
-    type: button
-    tap_action:
-      action: call-service
-      service: remote.send_command
-      service_data:
-        command: installation_mode,mode2
-      target:
-        entity_id: remote.nz7
-    name: IMAX
-    icon: mdi:television
-    show_state: false
+hold_action:
+  action: perform-action
+  perform_action: remote.send_command
+  target:
+    entity_id: remote.envy
+  data:
+    command: "KeyHold, UP"
 ```
+
+Scripts and automations can use `hold_secs: 1` with `KeyPress` to send the same
+native long-press event. `num_repeats` and `delay_secs` control a fixed number of
+commands; they do not track when a dashboard button is released.
+
+For arrows that **repeat while held**, install **Button Card** through HACS and
+use [`examples/envy-remote-repeat.yaml`](examples/envy-remote-repeat.yaml). Only
+the four arrows use custom cards and repeat `KeyPress` every 300 milliseconds.
+Other buttons keep their standard card and native long-press action. This is a
+separate example, so existing dashboards do not change on upgrade. Browser
+rendering and physical Envy behavior still need user testing.
+
+## Upgrade notes
+
+- Copy the complete component, including `_vendor`; copying only the top-level
+  Python files will no longer work.
+- Use the UI integration setup. YAML platform setup and `scan_interval` are not
+  supported by this version.
+- Commands containing CR, LF, NUL, or embedded double quotes are rejected.
+- A `KeyPress` with `hold_secs >= 1` now sends `KeyHold`. Repeats and delays are
+  now applied instead of ignored.
+
+Existing config entries and entity IDs are retained.

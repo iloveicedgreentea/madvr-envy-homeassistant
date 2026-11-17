@@ -1,0 +1,179 @@
+# Paste this into a Home Assistant dashboard manual card.
+# Replace remote.envy if Home Assistant assigned a different entity ID.
+type: grid
+columns: 3
+square: false
+cards:
+  - type: button
+    name: Power
+    icon: mdi:power
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, POWER"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, POWER"}
+  - type: button
+    name: Up
+    icon: mdi:arrow-up
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, UP"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, UP"}
+  - type: button
+    name: Settings
+    icon: mdi:cog
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, SETTINGS"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, SETTINGS"}
+  - type: button
+    name: Left
+    icon: mdi:arrow-left
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, LEFT"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, LEFT"}
+  - type: button
+    name: OK
+    icon: mdi:checkbox-blank-circle-outline
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, OK"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, OK"}
+  - type: button
+    name: Right
+    icon: mdi:arrow-right
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, RIGHT"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, RIGHT"}
+  - type: button
+    name: Input
+    icon: mdi:video-input-hdmi
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, INPUT"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, INPUT"}
+  - type: button
+    name: Down
+    icon: mdi:arrow-down
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, DOWN"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, DOWN"}
+  - type: button
+    name: Menu
+    icon: mdi:menu
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, MENU"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, MENU"}
+  - type: button
+    name: Red
+    icon: mdi:circle
+    icon_color: red
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, RED"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, RED"}
+  - type: button
+    name: Green
+    icon: mdi:circle
+    icon_color: green
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, GREEN"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, GREEN"}
+  - type: button
+    name: Blue
+    icon: mdi:circle
+    icon_color: blue
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, BLUE"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, BLUE"}
+  - type: button
+    name: Yellow
+    icon: mdi:circle
+    icon_color: yellow
+    tap_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyPress, YELLOW"}
+    hold_action:
+      action: perform-action
+      perform_action: remote.send_command
+      target: {entity_id: remote.envy}
+      data: {command: "KeyHold, YELLOW"}
